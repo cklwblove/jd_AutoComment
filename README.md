@@ -1,4 +1,130 @@
-# jd_AutoComment
+# 京东自动评价工具
+
+这是一个能够自动为京东订单生成评价、追评和服务评价的工具，提供了图形界面便于操作。
+
+## 功能特性
+
+- 自动评价待评价订单
+- 自动生成追评
+- 自动进行服务评价
+- 支持上传晒图
+- 图形界面操作，简单易用
+- 支持随时停止评价过程
+
+## 使用方法
+
+### 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 快速启动（推荐）
+
+使用统一启动器启动程序，可以自动选择图形界面或命令行模式：
+
+```bash
+# 默认启动图形界面
+python auto_comment_plus_launcher.py
+
+# 指定使用图形界面
+python auto_comment_plus_launcher.py --gui
+
+# 指定使用命令行，并传递参数
+python auto_comment_plus_launcher.py --cli --dry-run -lv DEBUG
+```
+
+### 图形界面启动
+
+```bash
+# 直接启动图形界面
+python jd_gui.py
+```
+
+### 命令行使用
+
+如果不使用图形界面，可以直接使用命令行：
+
+```bash
+# 使用增强版本（推荐）
+python auto_comment_plus_mod.py [--dry-run] [-lv DEBUG|INFO|WARNING|ERROR] [-o log_file]
+
+# 或使用原始版本
+python auto_comment_plus.py [--dry-run] [-lv DEBUG|INFO|WARNING|ERROR] [-o log_file]
+```
+
+参数说明：
+- `--dry-run`：模拟运行，不实际提交评价
+- `-lv, --log-level`：设置日志级别 
+- `-o, --log-file`：指定日志文件路径
+
+> 注意：`auto_comment_plus_mod.py` 是优化版，对获取订单信息的方法进行了增强，推荐使用。
+
+### 使用步骤
+
+1. 获取京东Cookie
+   - 登录京东网页版：https://www.jd.com/
+   - 进入评价页面：https://club.jd.com/myJdcomments/myJdcomment.action
+   - 浏览器开发者工具(F12) -> 网络 -> 刷新页面 -> 找到请求头中的Cookie
+   
+2. 在程序界面输入Cookie，点击"保存Cookie"
+
+3. 选择日志级别，建议普通用户使用"INFO"级别，排查问题使用"DEBUG"级别
+
+4. 点击"开始评价"按钮开始自动评价过程
+
+5. 如需停止，点击"停止评价"按钮
+
+## 常见问题解决
+
+### 获取不到订单信息
+
+如果遇到"获取不到订单信息"或"Cookie出现错误"的提示：
+
+1. 确认Cookie是否有效
+   - 重新获取最新的Cookie（注意复制完整，包括所有分号和值）
+   - 确保包含关键Cookie值：pin, _pst, thor, TrackID
+
+2. 检查日志文件
+   - 使用DEBUG级别运行程序：`python auto_comment_plus_launcher.py --cli -lv DEBUG -o debug.log`
+   - 查看生成的debug.log文件和debug_*.html文件找出问题
+
+3. 切换评价页面
+   - 建议使用电脑端直接访问：https://club.jd.com/myJdcomments/myJdcomment.action
+   - 确保账号中有待评价的订单
+
+4. 尝试使用增强版本
+   - 使用`auto_comment_plus_mod.py`代替`auto_comment_plus.py`
+   - 增强版本添加了更多的页面解析方法和错误处理
+
+## 图形界面新功能
+
+最新版本的图形界面增加了以下功能：
+
+1. **Cookie验证提示**：在保存Cookie时会检查关键值是否存在，并给出提示
+2. **帮助按钮**：提供获取Cookie方法和常见问题解决方案的详细说明
+3. **版本标识**：显示当前使用的程序版本
+4. **优化的停止功能**：更可靠的评价过程停止机制
+
+## 注意事项
+
+- Cookie有效期有限，过期后需要重新获取
+- 可能会因为京东页面结构的变更导致评价失败，如遇问题请提交issue
+- 如果没有待评价订单，程序会提示"当前没有需要评价的订单"
+- 程序运行期间不要操作京东页面或进行手动评价
+
+## 文件说明
+
+- `auto_comment_plus_launcher.py`：统一启动器（推荐使用）
+- `jd_gui.py`：图形界面程序
+- `auto_comment_plus.py`：原始核心评价功能模块
+- `auto_comment_plus_mod.py`：优化版核心功能模块（推荐使用）
+- `config.yml`：默认配置文件
+- `config.user.yml`：用户配置文件，保存用户Cookie
+
+## 免责声明
+
+本工具仅供学习交流使用，使用本工具产生的任何后果由使用者自行承担。
 
 ## 鸣谢
 
@@ -24,13 +150,16 @@ main分支为开发版，更新较快，但由于开发者cookie数量远远不�
 stable分支为稳定版，更新较慢，基本可以稳定使用，但功能可能存在欠缺。
 
 more_cookie分支是有需要多账号进行批量评论诞生的分支。
+
 > 由于作者只有一个 jd 账号，因此该more_cookie分支，需要有多账号的朋友进行测试。
-目前代码逻辑是 先普通评价-》再追评-》再第二个账号继续执行前面的顺序。所以你多账号可能要历史追评结束后才会执行，cookie 可能会失效，如果很多个 jd 账号话。可能实际上效果没那么好。
+> 目前代码逻辑是 先普通评价-》再追评-》再第二个账号继续执行前面的顺序。所以你多账号可能要历史追评结束后才会执行，cookie 可能会失效，如果很多个 jd 账号话。可能实际上效果没那么好。
 
 ### 安装依赖库
 
 ```bash
 pip install -r requirements.
+# or
+python3 -m pip install -r requirements
 
 请用户自行判断使用哪个分支。
 

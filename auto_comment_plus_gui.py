@@ -1,0 +1,1525 @@
+# -*- coding: utf-8 -*-
+# @Time : 2022/2/8 20:50
+# @Author : @qiu-lzsnmb and @Dimlitter
+# @File : auto_comment_plus.py
+
+import argparse, uuid
+import copy
+import logging
+import os
+import random
+import sys
+import time
+import urllib
+import json
+
+import jieba  # just for linting
+import jieba.analyse
+import requests
+import yaml
+from lxml import etree
+
+import jdspider
+
+# 添加停止标记
+stop_flag = False
+
+# constants
+CONFIG_PATH = "./config.yml"
+USER_CONFIG_PATH = "./config.user.yml"
+ORDINARY_SLEEP_SEC = 10
+SUNBW_SLEEP_SEC = 5
+REVIEW_SLEEP_SEC = 10
+SERVICE_RATING_SLEEP_SEC = 15
+
+# logging with styles
+# Reference: https://stackoverflow.com/a/384125/12002560
+_COLORS = {
+    "black": 0,
+    "red": 1,
+    "green": 2,
+    "yellow": 3,
+    "blue": 4,
+    "magenta": 5,
+    "cyan": 6,
+    "white": 7,
+}
+
+_RESET_SEQ = "\033[0m"
+_COLOR_SEQ = "\033[1;%dm"
+_BOLD_SEQ = "\033[1m"
+_ITALIC_SEQ = "\033[3m"
+_UNDERLINED_SEQ = "\033[4m"
+
+_FORMATTER_COLORS = {
+    "DEBUG": _COLORS["blue"],
+    "INFO": _COLORS["green"],
+    "WARNING": _COLORS["yellow"],
+    "ERROR": _COLORS["red"],
+    "CRITICAL": _COLORS["red"],
+}
+
+
+def format_style_seqs(msg: str, use_style: bool = True):
+    if use_style:
+        msg = msg.replace("$RESET", _RESET_SEQ)
+        msg = msg.replace("$BOLD", _BOLD_SEQ)
+        msg = msg.replace("$ITALIC", _ITALIC_SEQ)
+        msg = msg.replace("$UNDERLINED", _UNDERLINED_SEQ)
+    else:
+        msg = msg.replace("$RESET", "")
+        msg = msg.replace("$BOLD", "")
+        msg = msg.replace("$ITALIC", "")
+        msg = msg.replace("$UNDERLINED", "")
+
+
+class StyleFormatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None, use_style=True):
+        logging.Formatter.__init__(self, fmt, datefmt)
+        self.use_style = use_style
+
+    def format(self, record):
+        rcd = copy.copy(record)
+        levelname = rcd.levelname
+        if self.use_style and levelname in _FORMATTER_COLORS:
+            levelname_with_color = "%s%s%s" % (
+                _COLOR_SEQ % (30 + _FORMATTER_COLORS[levelname]),
+                levelname,
+                _RESET_SEQ,
+            )
+            rcd.levelname = levelname_with_color
+        return logging.Formatter.format(self, rcd)
+
+
+# 生成随机文件名
+def generate_unique_filename():
+    # 获取当前时间戳的最后5位
+    timestamp = str(int(time.time()))[-5:]
+
+    # 生成 UUID 的前5位
+    unique_id = str(uuid.uuid4().int)[:5]
+
+    # 组合生成10位的唯一文件名
+    unique_filename = f"{timestamp}{unique_id}.jpg"
+
+    return unique_filename
+
+
+# 下载图片
+def download_image(img_url, file_name):
+    fullUrl = f"https:{img_url}"
+    response = requests.get(fullUrl)
+    if response.status_code == 200:
+        directory = "img"
+        if not os.path.exists(directory):
+            # 如果目录不存在，创建目录
+            os.makedirs(directory)
+        file_path = os.path.join(directory, file_name)
+        with open(file_path, "wb") as file:
+            file.write(response.content)
+        return file_path
+    else:
+        print("Failed to download image")
+        return None
+
+
+# 上传图片到JD接口
+def upload_image(filename, file_path, session, headers):
+    # session.mount(
+    #     "https://club.jd.com/myJdcomments/ajaxUploadImage.action", Http2Adapter()
+    # )
+
+    files = {
+        "name": (None, filename),
+        # 不需要 PHPSESSID 时可以忽略
+        # 如果需要的话，可以从初次登录响应中获取
+        "Filedata": (file_path, open(file_path, "rb"), "image/jpeg"),
+    }
+
+    # 发起 POST 请求
+    response = session.post(
+        "https://club.jd.com/myJdcomments/ajaxUploadImage.action",
+        headers=headers,
+        files=files,
+    )
+
+    return response 
+
+# 评价生成
+def generation(pname:str, _class: int = 0, _type: int = 1, opts: object = None):
+    result = []
+    opts = opts or {}
+    items = ["商品名"]
+    items.clear()
+    items.append(pname)
+    opts["logger"].debug("Items: %s", items)
+    loop_times = len(items)
+    opts["logger"].debug("Total loop times: %d", loop_times)
+    for i, item in enumerate(items):
+        opts["logger"].debug("Loop: %d / %d", i + 1, loop_times)
+        opts["logger"].debug("Current item: %s", item)
+        spider = jdspider.JDSpider(item)
+        opts["logger"].debug("Successfully created a JDSpider instance")
+        # 增加对增值服务的评价鉴别
+        if "赠品" in pname or "非实物" in pname or "增值服务" in pname:
+            result = [
+                "赠品挺好的。",
+                "很贴心，能有这样免费赠送的赠品!",
+                "正好想着要不要多买一份增值服务，没想到还有这样的赠品。",
+                "赠品正合我意。",
+                "赠品很好，挺不错的。",
+                "本来买了产品以后还有些担心。但是看到赠品以后就放心了。",
+                "不论品质如何，至少说明店家对客的态度很好！",
+                "我很喜欢这些商品！",
+                "我对于商品的附加值很在乎，恰好这些赠品为这件商品提供了这样的的附加值，这令我很满意。"
+                "感觉现在的网购环境环境越来越好了，以前网购的时候还没有过么多贴心的赠品和增值服务",
+                "第一次用京东，被这种赠品和增值服物的良好态度感动到了。",
+                "赠品还行。",
+            ]
+        else:
+            result = spider.getData(2, 3)  # 这里可以自己改
+        opts["logger"].debug("Result: %s", result)
+
+    # class 0是评价 1是提取id
+    try:
+        name = jieba.analyse.textrank(pname, topK=5, allowPOS="n")[0]
+        opts["logger"].debug("Name: %s", name)
+    except Exception as e:
+        opts["logger"].warning(
+            'jieba textrank analysis error: %s, name fallback to "宝贝"', e
+        )
+        name = "宝贝"
+    if _class == 1:
+        opts["logger"].debug("_class is 1. Directly return name")
+        return name
+    else:
+        num = 0
+        if _type == 1:
+            num = 6
+        elif _type == 0:
+            num = 4
+        num = min(num, len(result))
+        if num == 0:
+            opts["logger"].warning("0 result has been fetched. Use fallback result")
+            return (
+                5,
+                "这个商品挺好的，我特别喜欢，推荐购买哦",
+            )  # 以防万一没有抓取到评价，防止程序崩溃
+        temp = [5, ""]
+        temp[1] = result[random.randint(0, num - 1)]
+        opts["logger"].debug("Return value: %s", temp)
+        return temp
+        # 原来是[5， ""]; 现在改为4星+好评 5星+好评 4星+中评 随机
+
+
+def all_evaluate(opts=None):
+    global stop_flag
+    opts = opts or {}
+    Comment_num = {
+        "待评价订单": 0,
+        "待追评": 0,
+        "服务评价": 0,
+        "晒单评价": 0,
+        "已评价": 0,
+    }
+    try:
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return Comment_num
+            
+        url = "https://club.jd.com/myJdcomments/myJdcomment.action"
+        opts["logger"].debug(f"开始访问京东评价页面: {url}")
+        
+        # 增加请求头调试
+        opts["logger"].debug(f"请求头详情: {headers}")
+        
+        req = requests.get(url, headers=headers)
+        opts["logger"].debug(f"页面请求状态码: {req.status_code}")
+        
+        if req.status_code != 200:
+            opts["logger"].warning(
+                "可能是cookie的问题请重新获取cookie，目前返回的状态码为:%s" % req.status_code
+            )
+            opts["logger"].debug("尝试使用备用请求头...")
+            req = requests.get(url, headers=headers2)
+            opts["logger"].debug(f"备用请求头页面状态码: {req.status_code}")
+            
+            if req.status_code != 200:
+                opts["logger"].warning(
+                    "两种请求头都失败，目前返回的状态码为:%s" % req.status_code
+                )
+                return {}
+        
+        # 保存响应内容以便调试
+        with open("debug_response.html", "wb") as f:
+            f.write(req.content)
+        opts["logger"].debug("已保存响应内容到debug_response.html文件")
+        
+        et = etree.HTML(req.text)
+        
+        # 尝试查找页面标题，确认已正确登录
+        title = et.xpath('//title/text()')
+        if title:
+            opts["logger"].debug(f"页面标题: {title[0]}")
+            
+        # 检查是否有提示需要登录的信息
+        login_notice = et.xpath('//div[contains(@class, "login-notice")]/text()')
+        if login_notice:
+            opts["logger"].warning(f"可能需要登录: {login_notice}")
+            
+        mycomment_tabs = [
+            "newComment",
+            "appendComment",
+            "serviceComment",
+            "showOrder",
+            "discussed",
+        ]
+        Commenturl = []
+        for tab in mycomment_tabs:
+            _url = f"https://club.jd.com/myJdcomments/myJdcomment.action?tabType={tab}"
+            Commenturl.append(_url)
+            
+        opts["logger"].debug(f"将访问的标签URL: {Commenturl}")
+            
+        for index, curl in enumerate(Commenturl):
+            if index != 3:
+                opts["logger"].debug(f"正在访问标签URL: {curl}")
+                req = requests.get(curl, headers=headers)
+                opts["logger"].debug(f"标签页请求状态码: {req.status_code}")
+                
+                # 保存每个标签页的响应
+                with open(f"debug_tab_{index}.html", "wb") as f:
+                    f.write(req.content)
+                opts["logger"].debug(f"已保存标签{index}响应内容到debug_tab_{index}.html文件")
+                
+                # 检查页面是否包含待处理订单数量信息
+                if "accTitle" in req.text:
+                    opts["logger"].debug(f"标签{index}页面包含accTitle")
+                    et1 = etree.HTML(req.text)
+                    
+                    # 尝试多种可能的XPath
+                    text1 = et1.xpath('//div[@class="number"]/text() | //div[@class="number"]/strong/text()')
+                    if not text1:
+                        # 尝试其他可能的XPath
+                        text1 = et1.xpath('//div[contains(@class, "number")]/text() | //div[contains(@class, "number")]/strong/text()')
+                    
+                    if not text1:
+                        # 尝试更宽松的XPath
+                        text1 = et1.xpath('//*[contains(@class, "number")]/text() | //*[contains(@class, "number")]/*/text()')
+                    
+                    opts["logger"].debug(f"标签{index}提取到的文本: {text1}")
+                    
+                    if len(text1) != 0:
+                        if index == 0:  # 待评价订单
+                            # 尝试多种可能的格式
+                            if text1[0].find("/") != -1:
+                                text1 = text1[0].split("/")
+                                Comment_num["待评价订单"] = int(
+                                    text1[0].replace(" 单", "").strip()
+                                )
+                                opts["logger"].debug(f"提取到待评价订单数: {Comment_num['待评价订单']}")
+                            elif text1[0].find("单") != -1:
+                                # 尝试直接提取数字
+                                import re
+                                number = re.search(r'(\d+)\s*单', text1[0])
+                                if number:
+                                    Comment_num["待评价订单"] = int(number.group(1))
+                                    opts["logger"].debug(f"通过正则提取到待评价订单数: {Comment_num['待评价订单']}")
+                            else:
+                                # 如果没有发现数字，尝试手动查找页面中的订单
+                                order_items = et1.xpath('//div[contains(@class, "commentItem")]')
+                                if order_items:
+                                    Comment_num["待评价订单"] = len(order_items)
+                                    opts["logger"].debug(f"通过订单项计数得到待评价订单数: {Comment_num['待评价订单']}")
+                                else:
+                                    Comment_num["待评价订单"] = 0
+                                    opts["logger"].debug("未找到待评价订单")
+
+                        elif index == 1:  # 待追评
+                            if text1[0].find("/") != -1:
+                                text1 = text1[0].split("/")
+                                Comment_num["待追评"] = int(
+                                    text1[0].replace(" 单", "").strip()
+                                )
+                            elif text1[0].find("单") != -1:
+                                import re
+                                number = re.search(r'(\d+)\s*单', text1[0])
+                                if number:
+                                    Comment_num["待追评"] = int(number.group(1))
+                            else:
+                                Comment_num["待追评"] = 0
+                                
+                        elif index == 2:  # 服务评价
+                            if text1[0].find("/") != -1:
+                                text1 = text1[0].split("/")
+                                Comment_num["服务评价"] = int(
+                                    text1[0].replace(" 单", "").strip()
+                                )
+                            elif text1[0].find("单") != -1:
+                                import re
+                                number = re.search(r'(\d+)\s*单', text1[0])
+                                if number:
+                                    Comment_num["服务评价"] = int(number.group(1))
+                            else:
+                                Comment_num["服务评价"] = 0
+                                
+                        elif index == 4:  # 已评价
+                            if text1[0].find("累计已评价") != -1:
+                                text1 = text1[0].replace("累计已评价", "")
+                                Comment_num["已评价"] = int(text1)
+                            else:
+                                try:
+                                    # 尝试提取数字
+                                    import re
+                                    number = re.search(r'(\d+)', text1[0])
+                                    if number:
+                                        Comment_num["已评价"] = int(number.group(1))
+                                    else:
+                                        Comment_num["已评价"] = 0
+                                except:
+                                    Comment_num["已评价"] = 0
+                else:
+                    opts["logger"].warning(f"标签{index}页面不包含accTitle，无法获取数量信息")
+                
+        # 即使没有找到评价数量，也手动检查是否有待评价的订单
+        if Comment_num["待评价订单"] == 0:
+            opts["logger"].debug("尝试直接检查页面是否有待评价订单...")
+            url = "https://club.jd.com/myJdcomments/myJdcomment.action?tabType=newComment"
+            req = requests.get(url, headers=headers)
+            et = etree.HTML(req.text)
+            
+            # 尝试查找订单表格
+            order_tables = et.xpath('//table[contains(@class, "order-table")]')
+            if order_tables:
+                Comment_num["待评价订单"] = len(order_tables)
+                opts["logger"].debug(f"通过订单表格计数获得待评价订单数: {Comment_num['待评价订单']}")
+            
+            # 尝试其他可能的元素
+            order_items = et.xpath('//div[contains(@class, "item")]//a[contains(text(), "评价")]')
+            if order_items:
+                Comment_num["待评价订单"] = len(order_items)
+                opts["logger"].debug(f"通过评价按钮计数获得待评价订单数: {Comment_num['待评价订单']}")
+        
+        opts["logger"].debug(f"最终获取的评价数量: {Comment_num}")
+        return Comment_num
+
+    except IndexError as exc:
+        opts["logger"].error("捕获到一个索引异常错误: %s", exc)
+        raise
+
+    except Exception as e:
+        opts["logger"].error("Error: %s", e)
+        # 打印完整的错误堆栈
+        import traceback
+        opts["logger"].error("错误堆栈: %s", traceback.format_exc())
+        return {}
+
+
+def delete_jpg():
+    # 获取当前目录下所有文件名
+    file_list = os.listdir(".")
+
+    # 遍历所有文件，删除所有jpg文件
+    for file_name in file_list:
+        if file_name.endswith(".jpg"):
+            try:
+                os.remove(file_name)
+                print(f"已删除文件: {file_name}")
+            except Exception as e:
+                print(f"删除文件 {file_name} 时出错: {e}") 
+
+def ordinary(N, opts=None):
+    global stop_flag
+    time.sleep(3)
+    opts = opts or {}
+    Order_data = []
+    req_et = []
+    imgCommentCount_bool = True
+    
+    # 检查待评价订单数量
+    if N["待评价订单"] <= 0:
+        opts["logger"].warning("没有待评价订单，跳过评价步骤")
+        return N
+        
+    loop_times = N["待评价订单"] // 20 if N["待评价订单"] > 20 else 0
+    opts["logger"].debug("Fetching website data")
+    opts["logger"].debug("Total loop times: %d", loop_times)
+    
+    # 检查是否需要停止
+    if stop_flag:
+        opts["logger"].info("检测到停止标志，正在终止评价...")
+        return N
+    
+    # 首先尝试直接获取待评价页面
+    url = "https://club.jd.com/myJdcomments/myJdcomment.action?tabType=newComment"
+    opts["logger"].debug(f"直接访问待评价页面: {url}")
+    
+    try:
+        # 使用会话对象保持连接
+        session = requests.Session()
+        req = session.get(url, headers=headers)
+        opts["logger"].debug(f"待评价页面状态码: {req.status_code}")
+        
+        # 保存响应用于调试
+        with open("debug_comments_page.html", "wb") as f:
+            f.write(req.content)
+        
+        # 使用更精确的XPath来提取评价数据
+        et = etree.HTML(req.text)
+        
+        # 检查是否有订单数据
+        opts["logger"].debug("尝试不同的XPath查询来获取订单数据")
+        
+        # 尝试方法1：标准表格布局
+        elems = et.xpath('//table[contains(@class, "order-table")]/tbody')
+        if elems:
+            opts["logger"].debug(f"使用标准表格布局XPath找到 {len(elems)} 个订单项")
+            Order_data.extend(elems)
+        
+        # 尝试方法2：备用表格布局
+        if not Order_data:
+            elems = et.xpath('//table[contains(@class, "order-table")]')
+            if elems:
+                opts["logger"].debug(f"使用备用表格布局XPath找到 {len(elems)} 个订单项")
+                Order_data.extend(elems)
+        
+        # 尝试方法3：通用订单项布局
+        if not Order_data:
+            elems = et.xpath('//div[contains(@class, "comment-item") or contains(@class, "commentItem")]')
+            if elems:
+                opts["logger"].debug(f"使用通用订单项XPath找到 {len(elems)} 个订单项")
+                Order_data.extend(elems)
+        
+        # 尝试方法4：更宽泛的查询
+        if not Order_data:
+            elems = et.xpath('//*[contains(@class, "comment") and .//a[contains(text(), "评价")]]')
+            if elems:
+                opts["logger"].debug(f"使用宽泛查询XPath找到 {len(elems)} 个订单项")
+                Order_data.extend(elems)
+        
+        # 如果仍然找不到数据，尝试分页获取
+        if not Order_data:
+            opts["logger"].warning("直接获取未能找到订单数据，尝试分页获取...")
+            
+            # 获取页面上显示的待评价数量（可能与N中的数量不同）
+            page_count_elem = et.xpath('//span[contains(@class, "total")]/text()')
+            if page_count_elem:
+                try:
+                    # 尝试从页面元素中提取总数
+                    import re
+                    match = re.search(r'(\d+)', page_count_elem[0])
+                    if match:
+                        actual_count = int(match.group(1))
+                        opts["logger"].debug(f"页面显示的待评价数量: {actual_count}")
+                        # 更新循环次数
+                        loop_times = (actual_count // 20) + (1 if actual_count % 20 > 0 else 0)
+                except Exception as e:
+                    opts["logger"].error(f"解析页面评价数量出错: {str(e)}")
+            
+            # 如果页面没有显示数量或解析出错，使用N中的数量
+            if loop_times == 0:
+                loop_times = max(1, (N["待评价订单"] // 20) + (1 if N["待评价订单"] % 20 > 0 else 0))
+                
+            opts["logger"].debug(f"更新后的循环次数: {loop_times}")
+            
+            # 分页获取数据
+            for i in range(loop_times):
+                # 检查是否需要停止
+                if stop_flag:
+                    opts["logger"].info("检测到停止标志，正在终止评价...")
+                    return N
+                    
+                page_url = f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=0&page={i + 1}&tabType=newComment"
+                opts["logger"].debug(f"访问第 {i+1} 页: {page_url}")
+                
+                page_req = session.get(page_url, headers=headers)
+                if not page_req.ok:
+                    opts["logger"].warning(f"页面 {i+1} 请求失败，状态码: {page_req.status_code}")
+                    continue
+                    
+                # 保存页面用于调试
+                with open(f"debug_comments_page_{i+1}.html", "wb") as f:
+                    f.write(page_req.content)
+                
+                page_et = etree.HTML(page_req.text)
+                req_et.append(page_et)
+                
+                # 尝试多种XPath提取数据
+                found_data = False
+                
+                # 尝试方法1
+                elems = page_et.xpath('//table[contains(@class, "order-table")]/tbody')
+                if elems:
+                    opts["logger"].debug(f"页面 {i+1} 使用标准表格布局XPath找到 {len(elems)} 个订单项")
+                    Order_data.extend(elems)
+                    found_data = True
+                
+                # 尝试方法2
+                if not found_data:
+                    elems = page_et.xpath('//table[contains(@class, "order-table")]')
+                    if elems:
+                        opts["logger"].debug(f"页面 {i+1} 使用备用表格布局XPath找到 {len(elems)} 个订单项")
+                        Order_data.extend(elems)
+                        found_data = True
+                
+                # 尝试方法3
+                if not found_data:
+                    elems = page_et.xpath('//div[contains(@class, "comment-item") or contains(@class, "commentItem")]')
+                    if elems:
+                        opts["logger"].debug(f"页面 {i+1} 使用通用订单项XPath找到 {len(elems)} 个订单项")
+                        Order_data.extend(elems)
+                        found_data = True
+                
+                # 尝试方法4
+                if not found_data:
+                    elems = page_et.xpath('//*[contains(@class, "comment") and .//a[contains(text(), "评价")]]')
+                    if elems:
+                        opts["logger"].debug(f"页面 {i+1} 使用宽泛查询XPath找到 {len(elems)} 个订单项")
+                        Order_data.extend(elems)
+    
+    except Exception as e:
+        opts["logger"].error(f"获取待评价订单时出错: {str(e)}")
+        import traceback
+        opts["logger"].error(f"错误堆栈: {traceback.format_exc()}")
+    
+    # 检查是否获取到订单数据
+    if not Order_data:
+        opts["logger"].error("未能获取到任何待评价订单数据")
+        return N
+    
+    # 更新实际待评价订单数量
+    actual_order_count = len(Order_data)
+    opts["logger"].info(f"实际获取到 {actual_order_count} 个待评价订单")
+    N["待评价订单"] = actual_order_count
+    
+    # 如果没有订单，直接返回
+    if actual_order_count == 0:
+        return N
+    
+    # 开始评价过程
+    opts["logger"].debug("开始对获取到的订单进行评价")
+    for i, Order in enumerate(Order_data):
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return N
+            
+        try:
+            # 使用更灵活的XPath来提取订单信息
+            opts["logger"].debug(f"处理第 {i+1}/{actual_order_count} 个订单")
+            
+            # 尝试提取订单ID
+            oid_list = Order.xpath('.//span[contains(@class, "order-orderid")]/a/text() | .//span[contains(@class, "number")]/a/text()')
+            if not oid_list:
+                # 备用方法
+                oid_list = Order.xpath('.//a[contains(@href, "orderid=")]/text()')
+            
+            if not oid_list:
+                # 更通用的方法
+                oid_list = Order.xpath('.//a[contains(text(), "订单号")]/following-sibling::a[1]/text() | .//a[contains(text(), "订单编号")]/following-sibling::*[1]/text()')
+            
+            if not oid_list:
+                opts["logger"].warning(f"无法找到第 {i+1} 个订单的订单号，跳过")
+                continue
+                
+            oid = oid_list[0].strip()
+            opts["logger"].debug(f"订单ID: {oid}")
+            
+            # 尝试提取商品名称
+            oname_data = Order.xpath('.//div[contains(@class, "goods-item")]/a/text() | .//div[contains(@class, "p-name")]/a/text()')
+            if not oname_data:
+                # 备用方法
+                oname_data = Order.xpath('.//a[contains(@class, "goods-name") or contains(@class, "productDetail")]/text()')
+            
+            if not oname_data:
+                # 更通用的方法
+                oname_data = Order.xpath('.//a[contains(@href, "item.jd.com")]/text()')
+            
+            if not oname_data:
+                opts["logger"].warning(f"无法找到第 {i+1} 个订单的商品名称，使用默认名称")
+                oname_data = ["商品"]
+                
+            opts["logger"].debug(f"商品名称: {oname_data}")
+            
+            # 尝试提取商品ID
+            pid_data = Order.xpath('.//div[contains(@class, "goods-item")]/a/@href | .//div[contains(@class, "p-name")]/a/@href')
+            if not pid_data:
+                # 备用方法
+                pid_data = Order.xpath('.//a[contains(@class, "goods-name") or contains(@class, "productDetail")]/@href')
+            
+            if not pid_data:
+                # 更通用的方法
+                pid_data = Order.xpath('.//a[contains(@href, "item.jd.com")]/@href')
+            
+            if not pid_data:
+                opts["logger"].warning(f"无法找到第 {i+1} 个订单的商品ID，使用默认评价")
+                # 使用默认评价
+                pname = oname_data[0]
+                opts["logger"].info(f"正在评价第{i+1}个: {pname[:30]}")
+                
+                if opts["dry_run"]:
+                    time.sleep(3)
+                    opts["logger"].debug(f"(dry-run) 完成对商品: {pname[:30]} 的评价")
+                    continue
+                
+                rand_data = generation(pname, opts=opts)
+                
+                # 构造评价表单提交地址
+                post_url = (
+                    "https://club.jd.com/myJdcomments/saveProductComment.action"
+                )
+                # 使用通用的评价内容
+                payload = {
+                    "orderId": oid,
+                    "productId": "0",
+                    "content": rand_data[1],
+                    "score": str(rand_data[0]),
+                    "anonymousFlag": "1",
+                    "saveStatus": "1",
+                }
+                
+                opts["logger"].debug(f"提交评价数据: {payload}")
+                r = requests.post(post_url, data=payload, headers=headers)
+                opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                
+                if r.text.find('"success"') != -1:
+                    opts["logger"].info("评价成功！")
+                else:
+                    opts["logger"].error(f"评价失败: {r.text}")
+                    
+                continue
+                
+            opts["logger"].debug(f"商品链接: {pid_data}")
+            
+            for _i, _onamei in enumerate(oname_data):
+                # 检查是否需要停止
+                if stop_flag:
+                    opts["logger"].info("检测到停止标志，正在终止评价...")
+                    return N
+                    
+                pname = _onamei
+                pid = ""
+                
+                # 提取商品ID
+                try:
+                    import re
+                    match = re.search(r"item\.jd\.com/(\d+)\.html", pid_data[_i])
+                    if match:
+                        pid = match.group(1)
+                    else:
+                        # 尝试其他可能的商品ID格式
+                        match = re.search(r"product/(\d+)\.html", pid_data[_i])
+                        if match:
+                            pid = match.group(1)
+                        else:
+                            # 再尝试一种格式
+                            match = re.search(r"/(\d+)", pid_data[_i])
+                            if match:
+                                pid = match.group(1)
+                    
+                    if not pid:
+                        opts["logger"].warning(f"无法从链接 {pid_data[_i]} 中提取商品ID，跳过此商品")
+                        continue
+                        
+                    opts["logger"].debug(f"提取的商品ID: {pid}")
+                    
+                except Exception as e:
+                    opts["logger"].error(f"处理商品ID时出错: {str(e)}")
+                    continue
+                
+                try:
+                    opts["logger"].info(f"正在评价第{i+1}个订单的第{_i+1}个商品: {pname[:30]}")
+                    
+                    if opts["dry_run"]:
+                        time.sleep(3)
+                        opts["logger"].debug(f"(dry-run) 完成对商品: {pname[:30]} 的评价")
+                        continue
+                    
+                    # 生成评价内容
+                    rand_data = generation(pname, opts=opts)
+                    
+                    # 随机选择是否添加晒图
+                    use_imgs = random.random() > 0.3
+                    imgs = []
+                    
+                    if use_imgs and imgCommentCount_bool:
+                        try:
+                            opts["logger"].debug("尝试添加晒图...")
+                            img_url = None
+                            
+                            # 尝试从京东获取商品图片
+                            jd_img_url = f"https://img30.360buyimg.com/n0/{pid}_s.jpg"
+                            opts["logger"].debug(f"尝试从京东获取图片: {jd_img_url}")
+                            
+                            resp = requests.head(jd_img_url)
+                            if resp.status_code == 200:
+                                img_url = jd_img_url
+                            
+                            # 如果没有找到图片，尝试从其他来源获取
+                            if not img_url:
+                                opts["logger"].debug("从京东获取图片失败，尝试其他来源...")
+                                # 可以添加其他来源的尝试
+                                
+                            if img_url:
+                                # 下载并上传图片
+                                opts["logger"].debug(f"找到图片URL: {img_url}")
+                                filename = generate_unique_filename()
+                                file_path = download_image(img_url, filename)
+                                
+                                if file_path:
+                                    opts["logger"].debug(f"成功下载图片到: {file_path}")
+                                    # 创建一个会话对象用于上传
+                                    session = requests.Session()
+                                    for cookie in requests.utils.dict_from_cookiejar(session.cookies):
+                                        session.cookies.set(cookie, requests.utils.dict_from_cookiejar(session.cookies)[cookie])
+                                    
+                                    # 上传图片
+                                    response = upload_image(filename, file_path, session, headers)
+                                    if response:
+                                        opts["logger"].debug(f"图片上传成功: {response}")
+                                        try:
+                                            resp_data = json.loads(response)
+                                            if resp_data.get("status") == 1:
+                                                imgs.append(resp_data.get("data", {}).get("succImgUrl", [])[0])
+                                                opts["logger"].debug(f"已添加图片URL到评价: {imgs}")
+                                        except Exception as e:
+                                            opts["logger"].error(f"解析图片上传响应出错: {str(e)}")
+                        except Exception as img_e:
+                            opts["logger"].error(f"处理图片时出错: {str(img_e)}")
+                    
+                    # 构造评价表单提交地址
+                    post_url = (
+                        "https://club.jd.com/myJdcomments/saveProductComment.action"
+                    )
+                    
+                    # 准备评价数据
+                    payload = {
+                        "orderId": oid,
+                        "productId": pid,
+                        "content": rand_data[1],
+                        "score": str(rand_data[0]),
+                        "anonymousFlag": "1",
+                        "saveStatus": "1",
+                    }
+                    
+                    # 如果有图片，添加到表单
+                    if imgs:
+                        payload["imgs"] = ",".join(imgs)
+                        payload["saveStatus"] = "2"
+                    
+                    opts["logger"].debug(f"提交评价数据: {payload}")
+                    r = requests.post(post_url, data=payload, headers=headers)
+                    opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                    
+                    if r.text.find('"success"') != -1:
+                        opts["logger"].info("评价成功！")
+                    else:
+                        opts["logger"].error(f"评价失败: {r.text}")
+                    
+                    time.sleep(ORDINARY_SLEEP_SEC)
+                    
+                except Exception as e:
+                    opts["logger"].error(f"评价商品时出错: {str(e)}")
+                    import traceback
+                    opts["logger"].error(f"错误堆栈: {traceback.format_exc()}")
+                    
+        except Exception as e:
+            opts["logger"].error(f"处理订单时出错: {str(e)}")
+            import traceback
+            opts["logger"].error(f"错误堆栈: {traceback.format_exc()}")
+    
+    # 清理临时图片文件
+    try:
+        delete_jpg()
+    except Exception as e:
+        opts["logger"].error(f"清理临时图片文件时出错: {str(e)}")
+    
+    # 返回更新后的评价数量
+    N["待评价订单"] = max(0, N["待评价订单"] - actual_order_count)
+    opts["logger"].debug(f"评价完成后的待评价订单数: {N['待评价订单']}")
+    return N
+
+def review(N, opts=None):
+    global stop_flag
+    opts = opts or {}
+    Order_data = []
+    req_et = []
+    order_count = 0
+    loop_times = N["待追评"] // 20
+    opts["logger"].debug("Fetching website data")
+    opts["logger"].debug("Total loop times: %d", loop_times)
+    
+    # 检查是否需要停止
+    if stop_flag:
+        opts["logger"].info("检测到停止标志，正在终止评价...")
+        return N
+        
+    for i in range(loop_times + 1):
+        url = (
+            f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=3&"
+            f"page={i + 1}"
+        )
+        opts["logger"].debug("URL: %s", url)
+        req = requests.get(url, headers=headers)
+        opts["logger"].debug(
+            "Successfully accepted the response with status code %d", req.status_code
+        )
+        if not req.ok:
+            opts["logger"].warning(
+                "Status code of the response is %d, not 200", req.status_code
+            )
+        req_et.append(etree.HTML(req.text))
+        opts["logger"].debug("Successfully parsed an XML tree")
+    opts["logger"].debug("Fetching data from XML trees")
+    opts["logger"].debug("Total loop times: %d", loop_times)
+    for idx, req in enumerate(req_et):
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return N
+            
+        opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+        opts["logger"].debug("Fetching order data in the default XPath")
+        elems = req.xpath('//*[@id="main"]/div[2]/div[2]/table/tbody')
+        opts["logger"].debug("Count of fetched order data: %d", len(elems))
+        Order_data.extend(elems)
+    if len(Order_data) != N["待追评"]:
+        opts["logger"].debug(
+            'Count of fetched order data doesn\'t equal N["待追评"]'
+        )
+        opts["logger"].debug("Clear the list Order_data")
+        Order_data = []
+        opts["logger"].debug("Total loop times: %d", loop_times)
+        for idx, req in enumerate(req_et):
+            # 检查是否需要停止
+            if stop_flag:
+                opts["logger"].info("检测到停止标志，正在终止评价...")
+                return N
+                
+            opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+            opts["logger"].debug("Fetching order data in another XPath")
+            elems = req.xpath('//*[@id="main"]/div[2]/div[2]/table')
+            opts["logger"].debug("Count of fetched order data: %d", len(elems))
+            Order_data.extend(elems)
+
+    for i, Order in enumerate(Order_data):
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return N
+            
+        Order_tr = Order.xpath('tr[@class="tr-bd"]')
+        opts["logger"].debug("Count of Order_tr: %d", len(Order_tr))
+        for temp, tr in enumerate(Order_tr):
+            # 检查是否需要停止
+            if stop_flag:
+                opts["logger"].info("检测到停止标志，正在终止评价...")
+                return N
+                
+            time.sleep(REVIEW_SLEEP_SEC)
+            
+            # 提取订单号
+            try:
+                oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
+                opts["logger"].debug("oid: %s", oid)
+            except IndexError:
+                opts["logger"].warning(f"第{i+1}个订单未找到订单号，跳过")
+                continue
+            
+            try:
+                # 提取商品ID和名称
+                oname_data = tr.xpath("td[1]/div[1]/div[2]/div/a/text()")
+                opts["logger"].debug("oname_data: %s", oname_data)
+                if not oname_data:
+                    opts["logger"].warning(f"第{i+1}个订单第{temp+1}个商品未找到商品名称，跳过")
+                    continue
+                    
+                pid_data = tr.xpath("td[1]/div[1]/div[2]/div/a/@href")
+                opts["logger"].debug("pid_data: %s", pid_data)
+                if not pid_data:
+                    opts["logger"].warning(f"第{i+1}个订单第{temp+1}个商品未找到商品ID，跳过")
+                    continue
+                
+                # 提取评价ID
+                pj_id = tr.xpath('td[3]/div/a/@onclick')
+                if not pj_id:
+                    opts["logger"].warning(f"第{i+1}个订单第{temp+1}个商品未找到评价ID，跳过")
+                    continue
+                
+                # 处理PID
+                oname = oname_data[0]
+                pid = pid_data[0]
+                pid = pid.replace("//item.jd.com/", "").replace(".html", "")
+                opts["logger"].debug("pid: %s", pid)
+                if "javascript" in pid:
+                    opts["logger"].error(
+                        "pid_data: %s,这个订单估计是京东外卖的，会导致此次评价失败，请把该 %s 商品手工评价后再运行程序。"
+                        % (pid, oname),
+                    )
+                    continue
+                
+                # 生成评价内容
+                Str = f"不得不说京东的物流太快了，上一次{oname}的使用体验非常好，赞一个，棒棒哒"
+                opts["logger"].debug("Review content: %s", Str)
+                Str: str = urllib.parse.quote(Str, safe="/", encoding=None, errors=None)
+                
+                # 提取评价ID
+                try:
+                    tmp = pj_id[0].split("(")[1].split(")")[0].split(",")
+                    oid2 = tmp[0].replace("'", "")
+                    pid = tmp[1].replace("'", "")
+                    opts["logger"].debug("oid2: %s", oid2)
+                    opts["logger"].debug("pid: %s", pid)
+                except:
+                    opts["logger"].error(f"提取评价ID失败: {pj_id}")
+                    continue
+                    
+                # 构建请求数据
+                url2 = "https://club.jd.com/myJdcomments/saveAppendComment.action"
+                opts["logger"].debug("URL: %s", url2)
+                Comment_data = {
+                    "orderId": oid,
+                    "productId": pid,
+                    "content": Str,
+                    "anonymousFlag": 1,
+                }
+                opts["logger"].debug("Comment data: %s", Comment_data)
+                opts["logger"].info(f"\t开始第{i+1}个订单的第{temp+1}个商品:{oname}的追评")
+                
+                # 发送请求
+                if not opts.get("dry_run"):
+                    opts["logger"].debug("Sending comment request")
+                    try:
+                        Comment_resp = requests.post(url2, headers=headers2, data=Comment_data)
+                        opts["logger"].info(
+                            "发送请求后的状态码:{},text:{}".format(
+                                Comment_resp.status_code, Comment_resp.text
+                            )
+                        )
+                        
+                        if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
+                            order_count += 1
+                            opts["logger"].info(f"\t追评成功:{oname}")
+                        else:
+                            opts["logger"].warning(f"\t追评失败:{oname}")
+                    except Exception as e:
+                        opts["logger"].error(f"发送请求时出错: {e}")
+                else:
+                    opts["logger"].debug("Skipped sending comment request in dry run")
+                    opts["logger"].info(f"\t[DRY RUN] 追评成功:{oname}")
+                    order_count += 1
+            except Exception as e:
+                opts["logger"].error(f"处理第{i+1}个订单的第{temp+1}个商品时出错: {str(e)}")
+    
+    opts["logger"].info(f"成功追评了 {order_count} 个商品")
+    N["待追评"] = 0
+    return N
+
+
+def Service_rating(N, opts=None):
+    global stop_flag
+    opts = opts or {}
+    Order_data = []
+    req_et = []
+    successful_evaluations = 0
+    
+    # 检查是否需要停止
+    if stop_flag:
+        opts["logger"].info("检测到停止标志，正在终止评价...")
+        return N
+        
+    try:
+        loop_times = N["服务评价"] // 20 + 1
+        opts["logger"].debug("Fetching website data")
+        opts["logger"].debug("Total loop times: %d", loop_times)
+        
+        for i in range(loop_times):
+            # 检查是否需要停止
+            if stop_flag:
+                opts["logger"].info("检测到停止标志，正在终止评价...")
+                return N
+                
+            url = f"https://club.jd.com/myJdcomments/myJdcomment.action?sort=4&page={i+1}"
+            opts["logger"].debug("URL: %s", url)
+            req = requests.get(url, headers=headers)
+            opts["logger"].debug(
+                "Successfully accepted the response with status code %d", req.status_code
+            )
+            if not req.ok:
+                opts["logger"].warning(
+                    "Status code of the response is %d, not 200", req.status_code
+                )
+            req_et.append(etree.HTML(req.text))
+            opts["logger"].debug("Successfully parsed an XML tree")
+        
+        opts["logger"].debug("Fetching data from XML trees")
+        opts["logger"].debug("Total loop times: %d", loop_times)
+        for idx, i in enumerate(req_et):
+            # 检查是否需要停止
+            if stop_flag:
+                opts["logger"].info("检测到停止标志，正在终止评价...")
+                return N
+                
+            opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+            opts["logger"].debug("Fetching order data in the default XPath")
+            elems = i.xpath('//*[@id="main"]/div[2]/div[2]/table/tbody')
+            opts["logger"].debug("Count of fetched order data: %d", len(elems))
+            Order_data.extend(elems)
+        
+        if len(Order_data) != N["服务评价"]:
+            opts["logger"].debug(
+                'Count of fetched order data doesn\'t equal N["服务评价"]'
+            )
+            opts["logger"].debug("Clear the list Order_data")
+            Order_data = []
+            opts["logger"].debug("Total loop times: %d", loop_times)
+            for idx, i in enumerate(req_et):
+                # 检查是否需要停止
+                if stop_flag:
+                    opts["logger"].info("检测到停止标志，正在终止评价...")
+                    return N
+                    
+                opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+                opts["logger"].debug("Fetching order data in another XPath")
+                elems = i.xpath('//*[@id="main"]/div[2]/div[2]/table')
+                opts["logger"].debug("Count of fetched order data: %d", len(elems))
+                Order_data.extend(elems)
+        
+        opts["logger"].info(f"当前有{N['服务评价']}个服务评价。")
+        
+        for i, Order in enumerate(Order_data):
+            # 检查是否需要停止
+            if stop_flag:
+                opts["logger"].info("检测到停止标志，正在终止评价...")
+                return N
+                
+            try:
+                # 尝试提取服务评价的订单号
+                oid = Order.xpath('tr[@class="tr-th"]/td/span[3]/a/text()')[0]
+                opts["logger"].debug("oid: %s", oid)
+                
+                # 提取服务评价按钮
+                service_rating_buttons = Order.xpath('tr[@class="tr-bd"]/td[5]/div/a[text()="评价"]')
+                
+                if not service_rating_buttons:
+                    opts["logger"].warning(f"第{i+1}个订单没有找到服务评价按钮，跳过")
+                    continue
+                
+                # 获取服务评价URL
+                url = "https://club.jd.com/myJdcomments/saveServiceComment.action"
+                
+                # 构建评价数据
+                Comment_data = {
+                    "orderId": oid,
+                    "commentTagsVo[0].tagIndex": "0",
+                    "commentTagsVo[0].tagName": "送货准时",
+                    "commentTagsVo[0].tagDesc": "送货准时",
+                    "commentTagsVo[0].pid": "1001",
+                    "commentTagsVo[0].id": "1836",
+                    "commentTagsVo[0].categoryId": "0",
+                    "commentTagsVo[0].parentTagId": "0",
+                    "commentTagsVo[0].headTagId": "0",
+                    "commentTagsVo[0].score": "5",
+                    "commentTagsVo[0].status": "1",
+                    "commentTagsVo[1].tagIndex": "1",
+                    "commentTagsVo[1].tagName": "配送员服务态度好",
+                    "commentTagsVo[1].tagDesc": "配送员服务态度好",
+                    "commentTagsVo[1].pid": "1001",
+                    "commentTagsVo[1].id": "1890",
+                    "commentTagsVo[1].categoryId": "0",
+                    "commentTagsVo[1].parentTagId": "0",
+                    "commentTagsVo[1].headTagId": "0",
+                    "commentTagsVo[1].score": "5",
+                    "commentTagsVo[1].status": "1",
+                    "commentTagsVo[2].tagIndex": "2",
+                    "commentTagsVo[2].tagName": "包装完好",
+                    "commentTagsVo[2].tagDesc": "包装完好",
+                    "commentTagsVo[2].pid": "1001",
+                    "commentTagsVo[2].id": "1888",
+                    "commentTagsVo[2].categoryId": "0",
+                    "commentTagsVo[2].parentTagId": "0",
+                    "commentTagsVo[2].headTagId": "0",
+                    "commentTagsVo[2].score": "5",
+                    "commentTagsVo[2].status": "1",
+                }
+                
+                opts["logger"].info(f"\t正在评价第{i+1}个订单的服务态度...")
+                
+                # 发送评价请求
+                if not opts.get("dry_run"):
+                    Comment_resp = requests.post(url, headers=headers2, data=Comment_data)
+                    opts["logger"].info(
+                        "发送请求后的状态码:{},text:{}".format(
+                            Comment_resp.status_code, Comment_resp.text
+                        )
+                    )
+                    
+                    if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
+                        successful_evaluations += 1
+                        opts["logger"].info(f"\t服务评价成功:{oid}")
+                    else:
+                        opts["logger"].warning(f"\t服务评价失败:{oid}")
+                else:
+                    opts["logger"].debug("Skipped sending comment request in dry run")
+                    opts["logger"].info(f"\t[DRY RUN] 服务评价成功:{oid}")
+                    successful_evaluations += 1
+                
+                time.sleep(SERVICE_RATING_SLEEP_SEC)
+                
+            except Exception as e:
+                opts["logger"].error(f"处理第{i+1}个服务评价时出错: {str(e)}")
+        
+        opts["logger"].info(f"成功评价了 {successful_evaluations} 个服务")
+        # 无论是否评价成功，都将服务评价数量设为0，避免无限循环
+        N["服务评价"] = 0
+        return N
+    
+    except Exception as e:
+        opts["logger"].error(f"服务评价过程中出错: {str(e)}")
+        N["服务评价"] = 0
+        return N
+
+
+def No(opts=None):
+    global stop_flag
+    opts = opts or {}
+    
+    # 检查是否需要停止
+    if stop_flag:
+        opts["logger"].info("检测到停止标志，正在终止评价...")
+        return None
+        
+    # opts["logger"].info("")
+    N = all_evaluate(opts)
+    s = "----".join(["{} {}".format(i, N[i]) for i in N])
+    opts["logger"].info(s)
+    # opts["logger"].info("")
+    return N 
+
+def main(opts=None):
+    global stop_flag, headers, headers2
+    stop_flag = False  # 重置停止标记
+    
+    opts = opts or {}
+    opts["logger"].info("开始京东批量评价！")
+    
+    # 读取配置中的cookie并查看是否使用正确格式
+    if "config" in opts and "cookie" in opts["config"]:
+        ck = opts["config"]["cookie"]
+        opts["logger"].debug(f"使用从GUI获取的Cookie: {ck[:20]}...")
+    else:
+        # 从配置文件中读取
+        _cfg_path = USER_CONFIG_PATH if os.path.exists(USER_CONFIG_PATH) else CONFIG_PATH
+        with open(_cfg_path, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+        if not cfg or "user" not in cfg or "cookie" not in cfg["user"]:
+            opts["logger"].error("配置文件中没有有效的cookie，请检查配置文件")
+            return
+        ck = cfg["user"]["cookie"]
+        opts["logger"].debug(f"使用从配置文件获取的Cookie: {ck[:20]}...")
+    
+    # 更新Cookie格式，去除可能的编码
+    if isinstance(ck, bytes):
+        ck = ck.decode('utf-8')
+    
+    # 解析Cookie并提取关键值
+    cookie_dict = {}
+    for item in ck.split(';'):
+        if '=' in item:
+            name, value = item.strip().split('=', 1)
+            cookie_dict[name] = value
+    
+    # 检查必要的Cookie值
+    important_cookies = ["pin", "_pst", "thor", "TrackID"]
+    missing_cookies = [c for c in important_cookies if c not in cookie_dict]
+    if missing_cookies:
+        opts["logger"].warning(f"Cookie中缺少重要值: {missing_cookies}，这可能导致无法获取订单信息")
+    
+    # 更新headers
+    headers = {
+        "Cookie": ck,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        "Connection": "keep-alive",
+        "Cache-Control": "max-age=0",
+        "sec-ch-ua": '"Chromium";v="114", "Not=A?Brand";v="8"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"macOS"',
+        "DNT": "1",
+        "Upgrade-Insecure-Requests": "1",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
+        "Referer": "https://club.jd.com/",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+    }
+    
+    headers2 = {
+        "Cookie": ck,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        "Connection": "keep-alive",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Requested-With": "XMLHttpRequest",
+        "sec-ch-ua": '"Chromium";v="114", "Not=A?Brand";v="8"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"macOS"',
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Origin": "https://club.jd.com",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+        "Referer": "https://club.jd.com/myJdcomments/myJdcomment.action",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+    }
+    
+    # 更新jdspider中的cookie
+    jdspider.cookie = ck
+    
+    # 首先尝试访问登录页面，确认是否登录成功
+    try:
+        opts["logger"].debug("首先尝试访问京东登录状态验证页面...")
+        session = requests.Session()
+        login_check = session.get('https://order.jd.com/center/list.action', headers=headers, allow_redirects=False)
+        
+        if login_check.status_code == 302 and 'login' in login_check.headers.get('Location', ''):
+            opts["logger"].error("Cookie已失效，需要重新登录获取Cookie")
+            return
+        
+        opts["logger"].debug(f"登录状态检查结果: {login_check.status_code}")
+    except Exception as e:
+        opts["logger"].error(f"验证登录状态时出错: {str(e)}")
+    
+    # 开始评价流程
+    N = No(opts)
+    
+    # 检查是否需要停止
+    if stop_flag:
+        opts["logger"].info("检测到停止标志，正在终止评价...")
+        return
+        
+    opts["logger"].debug("N value after executing No(): %s", N)
+    if not N:
+        opts["logger"].error("Cookie出现错误，请重新获取！")
+        return
+        
+    opts["logger"].info(f"已评价：{N['已评价']}个")
+    if N["待评价订单"] != 0:
+        opts["logger"].info("1.开始普通评价")
+        N = ordinary(N, opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing ordinary(): %s", N)
+        N = No(opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing No(): %s", N)
+    
+    if N["待追评"] != 0:
+        opts["logger"].info("3.开始批量追评,注意：追评不会自动上传图片")
+        N = review(N, opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing review(): %s", N)
+        N = No(opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing No(): %s", N)
+        
+    if N["服务评价"] != 0:
+        opts["logger"].info("4.开始服务评价")
+        N = Service_rating(N, opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing Service_rating(): %s", N)
+        N = No(opts)
+        # 检查是否需要停止
+        if stop_flag:
+            opts["logger"].info("检测到停止标志，正在终止评价...")
+            return
+            
+        opts["logger"].debug("N value after executing No(): %s", N)
+        
+    opts["logger"].info("全部完成啦！")
+    retry_needed = False
+    # 检查是否有待处理的评价，但排除服务评价
+    for i in N:
+        if i != "服务评价" and N[i] != 0:
+            retry_needed = True
+            break
+    
+    if retry_needed and not stop_flag:
+        opts["logger"].warning("出现了二次错误，跳过了部分，重新尝试")
+        main(opts)
+
+
+if __name__ == "__main__":
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dry-run",
+        help="have a full run without comment submission",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-lv",
+        "--log-level",
+        help="specify logging level (default: info)",
+        default="INFO",
+    )
+    parser.add_argument(
+        "-o", "--log-file", help="specify logging file", default="log.txt"
+    )
+    args = parser.parse_args()
+    if args.log_level.upper() not in [
+        "DEBUG",
+        "WARN",
+        "INFO",
+        "ERROR",
+        "FATAL",
+        # NOTE: `WARN` is an alias of `WARNING`. `FATAL` is an alias of
+        # `CRITICAL`. Using these aliases is for developers' and users'
+        # convenience.
+        # NOTE: Now there is no logging on `CRITICAL` level.
+    ]:
+        args.log_level = "INFO"
+    else:
+        args.log_level = args.log_level.upper()
+    opts = {"dry_run": args.dry_run, "log_level": args.log_level}
+    if hasattr(args, "log_file"):
+        opts["log_file"] = args.log_file
+    else:
+        opts["log_file"] = None
+
+    # logging on console
+    _logging_level = getattr(logging, opts["log_level"])
+    logger = logging.getLogger("comment")
+    logger.setLevel(level=_logging_level)
+    # NOTE: `%(levelname)s` will be parsed as the original name (`FATAL` ->
+    # `CRITICAL`, `WARN` -> `WARNING`).
+    # NOTE: The alignment number should set to 19 considering the style
+    # controling characters. When it comes to file logger, the number should
+    # set to 8.
+    formatter = StyleFormatter("%(asctime)s %(levelname)-19s %(message)s")
+    rawformatter = StyleFormatter(
+        "%(asctime)s %(levelname)-8s %(message)s", use_style=False
+    )
+    console = logging.StreamHandler()
+    console.setLevel(_logging_level)
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    opts["logger"] = logger
+    # It's a hack!!!
+    jieba.default_logger = logging.getLogger("jieba")
+    jieba.default_logger.setLevel(level=_logging_level)
+    jieba.default_logger.addHandler(console)
+    # It's another hack!!!
+    jdspider.default_logger = logging.getLogger("spider")
+    jdspider.default_logger.setLevel(level=_logging_level)
+    jdspider.default_logger.addHandler(console)
+
+    logger.debug("Successfully set up console logger")
+    logger.debug("CLI arguments: %s", args)
+    logger.debug("Opening the log file")
+    if opts["log_file"]:
+        try:
+            handler = logging.FileHandler(opts["log_file"], "w")
+        except Exception as e:
+            logger.error("Failed to open the file handler")
+            logger.error("Error message: %s", e)
+            sys.exit(1)
+        handler.setLevel(_logging_level)
+        handler.setFormatter(rawformatter)
+        logger.addHandler(handler)
+        jieba.default_logger.addHandler(handler)
+        jdspider.default_logger.addHandler(handler)
+        logger.debug("Successfully set up file logger")
+    logger.debug("Options passed to functions: %s", opts)
+    logger.debug("Builtin constants:")
+    logger.debug("  CONFIG_PATH: %s", CONFIG_PATH)
+    logger.debug("  USER_CONFIG_PATH: %s", USER_CONFIG_PATH)
+    logger.debug("  ORDINARY_SLEEP_SEC: %s", ORDINARY_SLEEP_SEC)
+    logger.debug("  SUNBW_SLEEP_SEC: %s", SUNBW_SLEEP_SEC)
+    logger.debug("  REVIEW_SLEEP_SEC: %s", REVIEW_SLEEP_SEC)
+    logger.debug("  SERVICE_RATING_SLEEP_SEC: %s", SERVICE_RATING_SLEEP_SEC)
+
+    # parse configurations
+    logger.debug("Reading the configuration file")
+    if os.path.exists(USER_CONFIG_PATH):
+        logger.debug("User configuration file exists")
+        _cfg_path = USER_CONFIG_PATH
+    else:
+        logger.debug(
+            "User configuration file doesn't exist, fallback to the default one"
+        )
+        _cfg_path = CONFIG_PATH
+    with open(_cfg_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
+    logger.debug("Closed the configuration file")
+    logger.debug("Configurations in Python-dict format: %s", cfg)
+    ck = cfg["user"]["cookie"]
+    jdspider.cookie = ck.encode("utf-8")
+
+    headers2 = {
+        "Cookie": ck.encode("utf-8"),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/114.0.5735.110 Safari/537.36",
+        "Connection": "keep-alive",
+        "Cache-Control": "max-age=0",
+        "X-Requested-With": "XMLHttpRequest",
+        "sec-ch-ua": "",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "",
+        "DNT": "1",
+        "Upgrade-Insecure-Requests": "1",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "empty",
+        "Referer": "https://club.jd.com/",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        # 'Content-Type':'application/x-www-form-urlencoded'
+    }
+    headers = {
+        "Cookie": ck.encode("utf-8"),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/114.0.5735.110 Safari/537.36",
+        "Connection": "keep-alive",
+        "Cache-Control": "max-age=0",
+        "X-Requested-With": "XMLHttpRequest",
+        "sec-ch-ua": "",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "",
+        "DNT": "1",
+        "Upgrade-Insecure-Requests": "1",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "empty",
+        "Referer": "https://club.jd.com/",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+    }
+
+    main(opts) 

@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>我的京东-我的评价</title>
+<link type="text/css" rel="stylesheet"  href="//misc.360buyimg.com/??jdf/1.0.0/unit/ui-base/5.0.0/ui-base.css,jdf/1.0.0/unit/shortcut/5.0.0/shortcut.css,jdf/1.0.0/unit/global-header/1.0.0/global-header.css,jdf/1.0.0/unit/myjd/5.0.0/myjd.css,jdf/1.0.0/unit/nav/2.0.0/nav.css,jdf/1.0.0/unit/shoppingcart/2.0.0/shoppingcart.css,jdf/1.0.0/unit/global-footer/5.0.0/global-footer.css,jdf/1.0.0/unit/service/5.0.0/service.css,user/myjd/lib/1.0.0/widget/global/global.css"/>
+<script type="text/javascript">window.pageConfig={compatible:true};</script>
+<script type="text/javascript" src="//misc.360buyimg.com/jdf/1.0.0/unit/??base/5.0.0/base.js"></script>
+<script>
+	function play() {
+		var video = document.getElementById('myVideo');
+		var bg = document.getElementsByClassName('bottom-video-content-absolute');
+		if (bg && bg[0]) {
+			bg[0].style.display = 'none';
+			if (video) {
+				video.play()
+			}
+		}
+	}
+</script>
+<link type="text/css" rel="stylesheet"  href="//misc.360buyimg.com/user/myjd/comment/1.0.0/widget/??common/common.css,p-comment/p-comment.css,order-table-list/order-table-list.css,ui-page/ui-page.css,show/show.css" source="widget"/>
+<link rel="icon" href="//www.jd.com/favicon.ico" mce_href="//www.jd.com/favicon.ico" type="image/x-icon">
+<style type="text/css">
+	body {
+		-webkit-text-size-adjust: none;
+		background: white;
+		min-width: 5rem;
+		margin: 0;
+		padding: 0;
+		font-family: "microsoft yahei", Verdana, Arial, Helvetica, sans-serif;
+	}
+	body p {
+		margin: 0;
+	}
+	.estimate {
+		padding: 0.453rem;
+	}
+
+	.estimate ul, .estimate li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.estimate .estimate-lst li {
+		margin-left: 0.133rem;
+		padding: 0 0;
+		font-family: PingFangSC-Regular;
+		font-size: 0.32rem;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		line-height: 0.6rem;
+	}
+
+	.estimate .estimate-lst li:last-child {
+		border-bottom: none;
+	}
+
+	.estimate .estimate-lst li span:first-child {
+		display: table-cell;
+		width: 0.32rem;
+	}
+
+	.estimate .estimate-lst li span:last-child {
+		display: table-cell;
+		padding-right: 0.12rem;
+	}
+
+	/* help text msg 20150702 */
+	.sub-help-item-msg {
+		padding-right: 0.12rem;
+	}
+
+	.estimate .estimate-lst li .sub-items-ul li {
+		margin-left: 0.32rem;
+		padding: 0.067rem 0;
+		list-style-type: disc;
+		border: none;
+	}
+
+	h4.help-tit01 {
+		line-height: 0.32rem;
+		font-family: PingFangSC-Semibold;
+		font-size: 0.32rem;
+		color: #2E2D2D;
+		letter-spacing: 0;
+	}
+	h4.help-tit01-first {
+		line-height: 0.32rem;
+		font-family: PingFangSC-Semibold;
+		font-size: 0.32rem;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		margin: 0 0 0.453rem 0;
+	}
+	h4.help-tit01 {
+		margin: 0.453rem 0 0.453rem 0;
+	}
+	.estimate-lst table tr th, .estimate-lst table tr td {
+		text-align: center;
+		padding: 0;
+		height: 0.6rem;
+	}
+
+	.estimate-lst table tr th:first-of-type, .estimate-lst table tr td:first-of-type {
+		width: 50%;
+		text-align: center;
+	}
+
+	table {
+		border-top: 1px solid #e0e0e0;
+		border-right: 1px solid #e0e0e0;
+		border-bottom: 0;
+		border-left: 0;
+		clear: both;
+		margin-top: 0.147rem;
+		width: 100%;
+	}
+
+	table th {
+		text-align: center;
+	}
+
+	.estimate-lst td, th {
+		border-bottom: 1px solid #e0e0e0;
+		border-left: 1px solid #e0e0e0;
+		border-top: 0;
+		border-right: 0;
+		background: white;
+	}
+
+	.extra-lst table {
+		width: 9.093rem;
+		height: 4.133rem;
+		margin-top: 0.293rem;
+	}
+
+	.extra-lst table td, .extra-lst table th {
+		border-bottom: 1px solid #e0e0e0;
+		border-left: 1px solid #e0e0e0;
+		border-top: 0;
+		border-right: 0;
+		background: white;
+		padding: 0.04rem;
+	}
+
+	.extra-lst th {
+		font-family: PingFangSC-Semibold;
+		font-size: 0.32rem;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		text-align: center;
+	}
+
+	.extra-lst tr:not(:first-of-type) td:not(:first-of-type) {
+		font-family: PingFangSC-Regular;
+		font-size: 0.32rem;
+		color: #000000;
+	}
+
+	.extra-lst td {
+		font-family: PingFangSC-Semibold;
+		font-size: 0.32rem;
+		color: #2E2D2D;
+		letter-spacing: 0;
+	}
+
+	.extra-lst tr:not(:first-of-type) td:first-of-type, .extra-lst tr:not(:first-of-type) td:last-of-type {
+		text-align: center;
+	}
+
+	.top {
+		padding-top: 0.4rem;
+		background: #FFFFFF;
+		-webkit-box-shadow: 0 .027rem .8rem 0 rgba(0, 0, 0, .2);
+		box-shadow: 0 .027rem .8rem 0 rgba(0, 0, 0, .2);
+		border-bottom-left-radius: .533rem;
+		border-bottom-right-radius: .533rem
+	}
+	.top-header {
+		padding: 0 2px 20px 2px;
+	}
+	.top-header-banner-img {
+		width: 9.09rem;
+	}
+	.top-title {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		-webkit-justify-content: center
+	}
+	.top-title-img {
+		width: 3.413rem;
+		height: 0.4rem;
+	}
+	.top-content {
+		-webkit-box-pack: justify;
+		-ms-flex-pack: justify;
+		justify-content: space-between;
+		-webkit-justify-content: space-evenly
+	}
+	.top-content-icon, .top-content{
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center
+	}
+	.top-content-icon {
+		-webkit-box-orient: vertical;
+		-webkit-box-direction: normal;
+		-ms-flex-direction: column;
+		flex-direction: column;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		-webkit-justify-content: center
+	}
+	.top-content-icon-img {
+		width: 120px;
+		height: 120px;
+	}
+	.top-content-icon span {
+		font-family: PingFangSC-Regular;
+		font-size: 15px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		text-align: center;
+		margin-top: 15px;
+	}
+	.top-service-time {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center;
+		-webkit-box-pack: start;
+		-ms-flex-pack: start;
+		justify-content: flex-start;
+		-webkit-justify-content: flex-start;
+		margin-top: 20px
+	}
+	.top-service-time-img {
+		margin-left: 10px;
+		height: 15px;
+	}
+	.top-service-time span {
+		font-family: PingFangSC-Regular;
+		font-size: 12px;
+		color: #848484;
+		letter-spacing: 0;
+		margin-left: 10px;
+	}
+	.center {
+		padding: 0 100px;
+		-webkit-box-pack: justify;
+		-ms-flex-pack: justify;
+		justify-content: space-between;
+		-webkit-justify-content: space-between
+	}
+	.center-radius,
+	.center {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center
+	}
+	.center-radius {
+		background-color: #F6F6F6;
+		border-radius: 10px;
+		height: 140px;
+		width: 200px;
+		margin-top: 60px;
+		-webkit-box-orient: vertical;
+		-webkit-box-direction: normal;
+		-webkit-flex-direction: column;
+		-ms-flex-direction: column;
+		flex-direction: column;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		-webkit-justify-content: center;
+		background-color: #f6f6f6
+	}
+	.center-radius p {
+		font-family: PingFangSC-Regular;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		margin-top: 20px;
+		padding-top: 10px;
+	}
+	.center-double {
+		background-image: url("//club.jd.com/images/double-bg.png");
+	}
+	.center-radius .img1 {
+		position:inherit;
+		margin-top: -70px;
+		width: 130px;
+		height: 30px;
+	}
+
+	.img1IOS8 {
+		position: absolute;
+		margin-top: -1.2rem;
+		width: 3.467rem;
+		height: 0.667rem;
+		margin-left: 0.493rem;
+	}
+
+	.center-radius .img2 {
+		position: inherit;
+		margin-top: -38px;
+		width: 100px;
+		height: 18px;
+	}
+	.img2IOS8 {
+		position: absolute;
+		margin-top: -0.8rem;
+		width: 2.467rem;
+		height: 0.4rem;
+		margin-left: 0.947rem;
+	}
+	.separate {
+		height: 10px;
+		background-color: #F6F6F6;
+		margin-top: 20px;
+	}
+	.bottom-title {
+		text-align: center;
+		margin-top: .12rem;
+		height: 1.773rem;
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		-webkit-justify-content: center
+	}
+	.bottom-title img {
+		width: 180px;
+		height: 50px;
+		margin-top: 60px;
+	}
+	.bottom-content {
+		padding: 0 0.453rem;
+	}
+	.bottom-content-ref .p1 {
+		font-family: PingFangSC-Semibold;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		font-weight: bold;
+		margin-top: 60px;
+	}
+	.bottom-video .p1 {
+		font-family: PingFangSC-Semibold;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		margin-top: 5px;
+		font-weight: bold;
+	}
+	.bottom-content-ref .p2 {
+		font-family: PingFangSC-Semibold;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		margin-top: 5px;
+		font-weight: bold;
+	}
+	.bottom-content-ref .p3 {
+		font-family: PingFangSC-Regular;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		margin-top: 5px;
+	}
+	.bottom-content-ref-sample {
+		background: #F6F6F6;
+		border-radius: 0.133rem;
+		padding: 0.2rem 0.213rem 0.213rem 0.213rem;
+		margin-top: 0.093rem;
+	}
+	.bottom-content-ref-sample-textarea {
+		height: 60px;
+		font-family: PingFangSC-Regular;
+		font-size: 12px;
+		color: #2E2D2D;
+		letter-spacing: 0;
+		background-color: #F6F6F6;
+		border: 0;
+		resize: none;
+		margin-left: 10px;
+		margin-right: 10px;
+		margin-top: 10px;
+	}
+	.bottom-content-ref-sample-img {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-pack: justify;
+		-ms-flex-pack: justify;
+		justify-content: space-between;
+		-webkit-justify-content: space-between;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center;
+	}
+	.bottom-content-ref-sample-img img {
+		width: 150px;
+		margin: 10px 10px
+	}
+	.bottom-video-content {
+		margin-top: 10px;
+		width: 200px;
+		height: 200px;
+	}
+	.bottom-video-content-bg {
+		width: 300px;
+		height: 150px;
+	}
+	.bottom-video-content-play {
+		display: none;
+	}
+	.bottom-video-content-play-chrome {
+		position: relative;
+		margin-left: 100px;
+		margin-top: -110px;
+		width: 1.067rem;
+		height: 1.067rem;
+		display: block;
+	}
+	.bottom-video-content-play-safari {
+		position: absolute;
+		margin-left: -5.013rem;
+		margin-top: 1.827rem;
+		width: 1.067rem;
+		height: 1.067rem;
+		display: block;
+	}
+	.bottom-video-content-absolute {
+		position: relative;
+		margin-top: -200px;
+		z-index: 9999;
+	}
+	.rules {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		display: -webkit-flex;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		-webkit-justify-content: center;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		-webkit-align-items: center;
+		margin-top: .867rem
+	}
+	.rules-img {
+		width: 100px;
+		height: 50px;
+	}
+
+
+	.special-span {
+		width: 0 !important;
+	}
+
+	.special-span-width {
+		width: 0.52rem !important;
+	}
+</style>
+<link type="text/css" rel="stylesheet" href="//club.jd.com/misc/static/css/homeOrder.css"/>
+</head>
+<body myjd="_MYJD_comments">
+
+
+<!-- globalShortcut begin-->
+<!--shortcut start-->
+<div id="shortcut-2014">
+	<div class="w">
+    	<ul class="fl">
+    		<li id="ttbar-home"><i class="iconfont">&#xe608;</i><a href="//www.jd.com/" target="_blank">京东首页</a></li>
+    		<li class="dorpdown" id="ttbar-mycity"></li>
+    	</ul>
+    	<ul class="fr">
+			<li class="fore1" id="ttbar-login">
+				<a href="javascript:login();" class="link-login">你好，请登录</a>&nbsp;&nbsp;<a href="javascript:regist();" class="link-regist style-red">免费注册</a>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore2">
+				<div class="dt">
+					<a target="_blank" href="//order.jd.com/center/list.action">我的订单</a>
+				</div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore3 dorpdown" id="ttbar-myjd">
+				<div class="dt cw-icon">
+					<!-- <i class="ci-right"><s>◇</s></i> -->
+					<a target="_blank" href="//home.jd.com/">我的京东</a><i class="iconfont">&#xe605;</i>
+				</div>
+				<div class="dd dorpdown-layer"></div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore5"   id="ttbar-ent">
+				<div class="dt">
+					<a target="_blank" href="//b.jd.com/">企业采购</a>
+				</div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore6 dorpdown" id="ttbar-serv">
+				<div class="dt cw-icon">
+					<!-- <i class="ci-right"><s>◇</s></i> -->
+					客户服务<i class="iconfont">&#xe605;</i>
+				</div>
+				<div class="dd dorpdown-layer"></div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore7 dorpdown" id="ttbar-navs">
+				<div class="dt cw-icon">
+					<!-- <i class="ci-right"><s>◇</s></i> -->
+					网站导航<i class="iconfont">&#xe605;</i>
+				</div>
+				<div class="dd dorpdown-layer"></div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore8 dorpdown" id="ttbar-apps">
+				<div class="dt cw-icon">
+					<!-- <i class="ci-left"></i> -->
+					<!-- <i class="ci-right"><s>◇</s></i> -->
+					<a target="_blank" href="//app.jd.com/">手机京东</a>
+				</div>
+			</li>
+			<li class="spacer"></li>
+			<li class="fore9" id="ttbar-member">
+				<div class="dt">
+					<a href="javascript:void(0)" id="cniil_wza">网站无障碍</a>
+				</div>
+			</li>
+    	</ul>
+		<span class="clr"></span>
+    </div>
+</div>
+<div id="o-header-2013"><div id="header-2013" style="display:none;"></div></div>
+<!--shortcut end-->
+<script charset='utf-8' type="text/javascript" src="//static.360buyimg.com/item/assets/oldman/wza1/aria.js?appid=bfeaebea192374ec1f220455f8d5f952"></script>
+<style>
+#ttbar-mycity .dorpdown-layer .areamini_inter:last-of-type{
+    display:none;
+  }
+</style>
+
+<!--shortcut end-->
+
+<!--  /widget/nav/nav.tpl -->
+<div id="nav">
+	<div class="w">
+		<div class="logo">
+			<a href="//www.jd.com" target="_blank" class="fore1" clstag="homepage|keycount|home2013|Homejdlogo"></a>
+			<a href="//home.jd.com" target="_self" class="fore2" clstag="homepage|keycount|home2013|Homebackm">我的京东</a>
+			<a href="//www.jd.com" target="_blank" class="fore3" clstag="homepage|keycount|home2013|Homebackjd">返回京东首页</a>
+		</div>
+		<div class="navitems">
+			<ul>
+				<li class="fore-1">
+					<a target="_self" href="//home.jd.com" clstag="homepage|keycount|home2013|Homeindex">首页</a>
+				</li>
+				<li class="fore-3">
+					<div class="dl" clstag="click|keycount|myhome|hsz">
+						<div class="dt">
+							<span class="myjd-set">账户设置</span>
+							<b></b>
+						</div>
+						<div class="dd">
+							
+							<a tid="_MYJD_info" clstag="Homeyser" href="//i.jd.com/user/info" target="_self"><span>个人信息</span></a>
+							
+							<a tid="_MYJD_safe" clstag="Homesafe" href="//aq.jd.com/process/center?s=1" target="_self"><span>账户安全</span></a>
+                                                        <a tid="_MYJD_wdcm" clstag="Homewdcm" href="//helper.jd.com/IDPlus/pchtml/size-center.html" target="_self"><span>我的尺码</span></a>
+							<a tid="_MYJD_accbinde" clstag="Homezhbd" href="//safe.jd.com/union/index.action" target="_self"><span>账号绑定</span></a>
+							
+							
+							
+							<a tid="_MYJD_comments" clstag="homeadd" href="//easybuy.jd.com/address/getEasyBuyList.action" target="_self"><span>收货地址</span></a>
+							<a tid="_MYJD_yyrxx" clstag="homeyyrxx" href="//patient.jd.com/patientInfo" target="_self"><span>健康档案</span></a>
+							<a tid="_MYJD_share" clstag="Homeshare" href="//share.jd.com/share/index.html" target="_self"><span>分享绑定</span></a>
+							
+							<a tid="_MYJD_rss" clstag="Homeedm" href="//i-mkt.jd.com/subscribe/settings" target="_self"><span>邮件订阅</span></a>
+							
+							
+							
+							<a tid="_MYJD_app" clstag="Homeedm" href="//open.jd.com/home/home#/authorization" target="_blank"><span>授权管理</span></a>
+							
+							<a tid="_MYJD_pay" clstag="Homequick" href="https://authpay.jd.com/card/queryBindCard.action" target="_blank"><span>我的银行卡</span></a>
+							
+							<a tid="_MYJD_zpzz" clstag="Homezpzz" href="//invoice.jd.com/user/userinfo/zpzz.html" target="_self"><span>增票资质</span></a>
+<a tid="_MYJD_qyfp" clstag="Homeqyfp" href="//corp.jd.com/invoice/commonlist" target="_self"><span>企业发票</span></a>							
+<a tid="_MYJD_cgxqd" clstag="Homecgxqd" href="//kw.jd.com" target="_self"><span>采购需求单</span></a>
+						</div>
+					</div>
+				</li>
+				<li class="fore-4">
+					<div class="dl myjd-info" clstag="click|keycount|myhome|comments">
+						<div class="dt ">
+							<span>评价</span>
+							<b></b>
+						</div>
+						<div class="dd">
+							<a tid="_MYJD_mycomments0" clstag="HomeComments0" href="//club.jd.com/myJdcomments/myJdcomment.action" target="_self"><span>待评价</span></a>
+							<a tid="_MYJD_mycomments4" clstag="HomeComments4" href="//club.jd.com/myJdcomments/myJdcomment.action?sort=4" target="_self"><span>服务评价</span></a>
+							<a tid="_MYJD_mycomments3" clstag="HomeComments3" href="//club.jd.com/myJdcomments/myJdcomment.action?sort=3" target="_self"><span>待追评</span></a>
+							<a tid="_MYJD_mycomments2" clstag="HomeComments2" href="//club.jd.com/myJdcomments/myJdcomment.action?sort=2" target="_self"><span>已评价</span></a>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="nav-r">
+			<div id="search-2014" >
+					<ul id="shelper" class="hide"></ul>
+					<div class="form">
+						<input type="text" onkeydown="javascript:if(event.keyCode==13) search('key');" autocomplete="off" id="key" accesskey="s" class="text" />
+						<button onclick="search('key');return false;" class="button cw-icon"  type="button"><i></i>搜索</button>
+					</div>
+			    </div>
+			    <div id="settleup-2014" class="dorpdown">
+					<div class="cw-icon">
+						<i class="ci-left"></i>
+						<i class="ci-right">></i>
+						<a target="_blank" href="//cart.jd.com/cart.action">我的购物车</a>
+					</div>
+					<div class="dorpdown-layer">
+						<div class="spacer"></div>
+						<div id="settleup-content">
+							<span class="loading"></span>
+						</div>
+					</div>
+				</div>
+			    <div id="hotwords-2014"></div>
+		</div>
+		<div class="clr"></div>
+	</div>
+</div>
+<!--/ /widget/nav/nav.tpl -->
+
+
+<!-- main -->
+<div id="container">
+	<div class="w">
+		<div id="content">
+			<div id="sub">
+			<!--  /widget/menu/menu.tpl -->
+<div id="menu">
+	<dl class="fore1">
+		<dt id="_MYJD_order">订单中心</dt>
+		<dd class="fore1_1" id="_MYJD_ordercenter">
+			<a clstag="homepage|keycount|home2013|Homeoder" href="//order.jd.com/center/list.action" target="_self">我的订单</a>
+		</dd>
+		<dd class="fore1_5" id="_MYJD_comments">
+			<a clstag="homepage|keycount|home2013|Homecomments" href="//club.jd.com/mycomments.aspx" target="_self">评价晒单</a>
+		</dd>
+		<dd class="fore1_8" id="_MYJD_dxd">
+			<a clstag="homepage|keycount|home2013|Homedxd" href="//skunotify.jd.com/userTouchSub/query.action" target="_self">代下单</a>
+		</dd>
+	</dl>
+	<dl class="fore2">
+		<dt id="_MYJD_gz">关注中心</dt>
+		<dd class="fore2_1" id="_MYJD_product">
+			<a clstag="homepage|keycount|home2013|Homefollow" href="//t.jd.com/home/follow" target="_self">关注的商品</a>
+		</dd>
+		<dd class="fore2_2" id="_MYJD_vender">
+			<a clstag="homepage|keycount|home2013|Homefollowv" href="//t.jd.com/vender/followVenderList.action" target="_self">关注的店铺</a>
+		</dd>
+		<dd class="fore2_3" id="_MYJD_followwhat" style="display:none;">
+			<a clstag="homepage|keycount|home2013|Homewhat" href="//what.jd.com/my/follow/index " target="_self">关注的专辑</a>
+		</dd>
+		<dd class="fore2_4" id="JD_FOLLOW_CONTENT" style="display:none;">
+			<a clstag="homepage|keycount|home2013|Homettnr" href="//tt.jd.com" target="_self">收藏的内容 <img width="24" height="11" src="//misc.360buyimg.com/jd2008/skin/df/i/myjd-new-ico.png"/></a>
+		</dd>
+		<dd class="fore2_6" id="_MYJD_activity">
+			<a clstag="homepage|keycount|home2013|Homefollowa" href="//t.jd.com/activity/followActivityList.action" target="_self">关注的活动</a>
+		</dd>
+	</dl>
+	<dl class="fore3">
+		<dt id="_MYJD_zc">资产中心</dt>
+		<dd class="fore3_1" id="_MYJD_cashbox">
+			<a clstag="homepage|keycount|home2013|Homexjk" href="//jr.jddinnovation.com" target="_self">小金库</a>
+		</dd>
+		<dd class="fore3_2" id="_MYJD_credit"><a target="_blank" class="" clstag="homepage|keycount|home2013|hbt" tag="213" href="//baitiao.jd.com">京东白条</a></dd>
+		<dd class="fore3_5" id="_MYJD_jdfk">
+			<a clstag="homepage|keycount|home2013|Homejdfk" href="//mygiftcard.jd.com/giftcard/codeIndex.action" target="_self">领货码</a>
+		</dd>
+		<dd class="fore3_6" id="_MYJD_balance">
+			<a clstag="homepage|keycount|home2013|Homemoney" href="//mymoney.jd.com/finance/recently.action" target="_self">余额</a>
+		</dd>
+		<dd class="fore3_12" id="_MYJD_redpackage">
+			<a target="_self" class="" clstag="homepage|keycount|home2013|redpackage"  href="//myhongbao.jd.com">红包</a>
+		</dd>
+		<dd class="fore3_13" id="_MYJD_bankcard">
+			<a target="_self" class="" clstag="homepage|keycount|home2013|bankcard"  href="//authpay.jd.com/card/queryBindCard.action">银行卡</a>
+		</dd>
+		<dd class="fore3_7" id="_MYJD_ticket">
+			<a clstag="homepage|keycount|home2013|Homequan" href="//quan.jd.com/user_quan.action" target="_self">优惠券</a>
+		</dd>
+		<dd class="fore3_8" id="_MYJD_card">
+			<a clstag="homepage|keycount|home2013|Homegift" href="//mygiftcard.jd.com/giftcard/myGiftCardInit.action" target="_self">礼品卡</a>
+		</dd>
+
+		<dd class="fore3_10" id="_MYJD_bean">
+			<a clstag="homepage|keycount|home2013|Homedou" href="//bean.jd.com/myJingBean/list" target="_self">京豆</a>
+		</dd>
+	</dl>
+	<dl class="fore4">
+		<dt id="_MYJD_ts">特色业务</dt>
+		<dd class="fore4_18" id="_MYJD_qyzl">
+			<a clstag="homepage|keycount|home2013|Homeqyzl" href="//zl.jd.com/userCenter/home.html" target="_self">企业租赁</a>
+		</dd>
+		<dd class="fore4_1" id="_MYJD_tc">
+			<a clstag="homepage|keycount|home2013|Homemyyyt" href="//le.jd.com/myBusinessHall" target="_self">我的营业厅</a>
+		</dd>
+		<dd class="fore4_2" id="_MYJD_tx">
+			<a clstag="homepage|keycount|home2013|Homemobile" href="//mobile.jd.com/yyswt/myjd.do" target="_self">京东通信</a>
+		</dd>
+		<dd class="fore4_3" id="_MYJD_ding">
+			<a clstag="homepage|keycount|home2013|Homeding" href="//ding.jd.com/plan/showPlans.action" target="_self">定期购</a>
+		</dd>
+
+		<dd class="fore4_5" id="_MYJD_hsd">
+			<a clstag="homepage|keycount|home2013|Homewhsd" href="https://huishou.jd.com/order" target="_self">我的回收单</a>
+		</dd>
+		<dd class="fore4_6" id="_MYJD_jnbt" style="display:none;">
+			<a clstag="homepage|keycount|home2013|Homejnbt" href="//ptrade.jd.com/getNomalToJnActionList.html" target="_self">节能补贴</a>
+		</dd>
+		<dd class="fore4_7" id="_MYJD_yyfw">
+			<a clstag="homepage|keycount|home2013|Homeyyfw" href="//yiyaorx.jd.com/process_list.action" target="_self">医药服务</a>
+		</dd>
+		<dd class="fore4_8" id="_MYJD_lljyz">
+			<a clstag="homepage|keycount|home2013|Homelljyz" href="//datawallet.jd.com/profile.html" target="_self">流量加油站</a>
+		</dd>
+
+                <dd class="fore4_11" id="_MYJD_hwfc">
+			<a clstag="homepage|keycount|home2013|Homehwfcyy" href="//abdestate.jd.com/myjd" target="_self">海外房产预约</a>
+		</dd>
+               <dd class="fore4_12" id="_MYJD_homewdqqg">
+			<a clstag="homepage|keycount|home2013|homewdqqg" href="https://home.jd.hk" target="_self">我的京东国际</a>
+		</dd>
+               <dd class="fore4_13" id="_MYJD_stagepaymd">
+			<a clstag="homepage|keycount|home2013|homezxfw" href="//md-helper.jd.com/stagepay/index" target="_self">装修服务</a>
+		</dd>
+                <dd class="fore4_14" id="_MYJD_paimai">
+			<a clstag="pageclick|keycount|home_201804231|1" href="//ipaimai.jd.com/home/" target="_self">我的拍卖</a>
+		</dd>
+                <dd class="fore4_15" id="_MYJD_crt">
+			<a clstag="pageclick|keycount|home_201804231|2" href="//ctr.jd.com/order-list.html" target="_blank">我的集运</a>
+		</dd>
+              
+                <dd class="fore4_17" id="_MYJD_jipiao">
+			<a clstag="pageclick|keycount|home_201804231|4" href="//jipiao.jd.com/" target="_blank">京东机票</a>
+		</dd>
+	</dl>
+	<dl class="fore5">
+		<dt id="_MYJD_fw">客户服务</dt>
+		<dd class="fore5_1" id="_MYJD_repair">
+			<a clstag="homepage|keycount|home2013|Homerepair" href="//myjd.jd.com/afs/indexNew.action?entry=8" target="_self">返修退换货</a>
+		</dd>
+		<dd class="fore5_2" id="_MYJD_protection">
+			<a clstag="homepage|keycount|home2013|Homejb" href="//pcsitepp-fm.jd.com" target="_self">价格保护</a>
+		</dd>
+		<dd class="fore5_4" id="_MYJD_question">
+			<a clstag="homepage|keycount|home2013|Homewdwd" href="//question.jd.com/myjd/getMyjdQuestionList.action" target="_self">我的问答</a>
+		</dd>
+		<dd class="fore5_5" id="_MYJD_consultation">
+			<a clstag="homepage|keycount|home2013|Homeconsu" href="//club.jd.com/myjd/userConsultationList_1.html" target="_self">购买咨询</a>
+		</dd>
+		<dd class="fore5_6" id="_MYJD_referee">
+			<a clstag="homepage|keycount|home2013|Homemjyjf" href="//myjd-crm.jd.com/referee/orderlist.action" target="_self">交易纠纷</a>
+		</dd>
+		<dd class="fore5_7" id="_MYJD_foreign">
+			<a clstag="homepage|keycount|home2013|Homemjdwx" href="//weixiu.jd.com/mall/repair/foreign" target="_self">京东维修 </a>
+		</dd>
+
+        <dd class="fore5_9" id="_MYJD_wdfp">
+			<a clstag="homepage|keycount|home2013|Homezzfp" href="//myivc.jd.com/fpzz.html" target="_self">我的发票</a>
+		</dd>
+      <dd class="fore5_10" id="_MYJD_jbzx">
+			<a clstag="homepage|keycount|home2013|Homejbzx" href="//jubao.jd.com/myjd/list.html" target="_self">举报中心</a>
+		</dd>
+	</dl>
+	<dl class="fore6">
+		<dt id="_MYJD_sz">设置</dt>
+		<dd class="fore6_1" id="_MYJD_info">
+			<a clstag="homepage|keycount|home2013|Homeyser2" href="//i.jd.com/user/info" target="_self">个人信息</a>
+		</dd>
+		<dd class="fore6_2" id="_MYJD_add">
+			<a clstag="homepage|keycount|home2013|Homeadd2" href="//easybuy.jd.com/address/getEasyBuyList.action" target="_self">收货地址</a>
+		</dd>
+	</dl>
+</div>
+
+			<!--/ /widget/menu/menu.tpl -->
+			<div id="menu-ads">
+				<!--广告全部放这里-->
+			</div>
+			</div>
+			<div id="main" class="mycomment-wrap">
+				<div class="mycomment-hd">
+					<div class="m-title clearfix">
+						<h3 class="tit-main">评价晒单</h3>
+						<div class="tit-extra">
+							<a href="#none" class="link-jdbean"><i></i><em>评价及送京豆规则</em></a>
+						</div>
+					</div>
+				</div>
+				<div class="mycomment-bd">
+					<div class="m-tab-wrap clearfix">
+						<div class="m-tab">
+							<ul class="tab-trigger">
+								<li clstag="pageclick|keycount|201611254|3" class="trig-item trig-curr"><a class="text" href="?sort=0">待评价订单</a>
+                                        <b class="sup">6</b>
+								</li>
+								<li clstag="pageclick|keycount|201611254|5" class="trig-item"><a href="?sort=3" class="text">待追评</a>
+                                        <b class="sup">1</b>
+								</li>
+                                <li clstag="pageclick|keycount|fuwupingjia_201703297|1" class="trig-item"><a  href="?sort=4" class="text">服务评价</a>
+                                        <b class="sup">4</b>
+                                </li>
+								<li clstag="pageclick|keycount|201611254|6" class="trig-item"><a href="?sort=2" class="text">已评价</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="mycomment-table">
+<!--  /widget/order-table-list/order-table-list.tpl -->
+
+<table class="td-void order-tb">
+	<colgroup>
+		<col class="number-col">
+		<col class="consignee-col">
+		<col class="amount-col">
+		<col class="operate-col">
+	</colgroup>
+	<thead>
+		<tr>
+			<th>订单详情</th>
+			<th>收货人</th>
+			<th>金额</th>
+			<th>操作</th>
+		</tr>
+	</thead>
+	<!-- 独立订单 -->
+
+
+
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-22 07:05:24</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=316991106857&PassKey=07BD0BF356A12E0578374F85142EFA87" target="_blank" >316991106857</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/865331.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t1/319184/39/1600/149317/68288d5dF91fba1d5/0430d9dfdd95873f.jpg" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/865331.html">QQ星伊利儿童成长0蔗糖牛奶全聪125ml*20盒 礼盒装</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="2">
+				<div class="consignee">
+					<span class="txt"></span><b></b>
+				</div>
+			</td>
+			<td rowspan="2">
+				<div class="amount">
+				<span>
+				</span>
+				</div>
+			</td>
+			<td rowspan="2">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=316991106857&PassKey=07BD0BF356A12E0578374F85142EFA87" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=316991106857" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/100017094442.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t1/320830/30/1669/186061/6829ad95F91bb1d2c/23f22f70f0975bd0.jpg" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/100017094442.html">伊利臻浓牛奶 mini版臻浓125ml*20盒/箱 咖啡搭档 礼盒装</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+				</div>
+				<div class="clr"></div>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-22 07:05:24</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=316990368967&PassKey=79E108DCEA6E8DEA47524808E03F0AFD" target="_blank" >316990368967</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/100135458600.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t1/319321/40/580/247431/68246cddF27047411/d725d53db7a8f7da.jpg" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/100135458600.html">西牧天山新疆浓缩纯牛奶200ml*10盒整箱装3.3g乳蛋白全脂儿童早餐奶礼盒款</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="1">
+				<div class="consignee">
+					<span class="txt"></span><b></b>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="amount">
+				<span>
+				</span>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=316990368967&PassKey=79E108DCEA6E8DEA47524808E03F0AFD" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=316990368967" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-21 21:53:58</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=316979075653&PassKey=A63668A338799FE9D45F1694371B8F14" target="_blank" >316979075653</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/100034614601.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t1/311716/6/3052/150821/682e7ec8Ff41d9473/1a18588c91e55db6.jpg" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/100034614601.html">葫芦娃 小儿肺热咳喘颗粒4g*12袋/盒 清热解毒宣肺止咳化痰平喘用于感冒支气管炎属痰热壅肺证者</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="1">
+				<div class="consignee">
+					<span class="txt"></span><b></b>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="amount">
+				<span>
+				</span>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=316979075653&PassKey=A63668A338799FE9D45F1694371B8F14" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=316979075653" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-21 21:53:58</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=316979075685&PassKey=FFEBFCA6CF4E3592BD703A3FAA153272" target="_blank" >316979075685</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/100152197938.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t1/180279/22/48462/47139/67207f78Fc1054922/b4a2a10b9b67b223.png" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/100152197938.html">儿科专科极速图文问诊次卡</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+						x2
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="1">
+				<div class="consignee">
+					<span class="txt">李文博</span><b></b>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="amount">
+				<span>
+						支付金额 ￥0.00
+				</span>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=316979075685&PassKey=FFEBFCA6CF4E3592BD703A3FAA153272" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=316979075685" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-21 21:52:47</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=315361258874&PassKey=8CA13535191C0943EFB75EEA442E973E" target="_blank" >315361258874</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/4704495.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t20280519/314559/24/2403/91304/682bd851F7542c948/2c9df91b9fa78e1b.png" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/4704495.html">[健兴] 肺力咳合剂100ml/瓶</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="1">
+				<div class="consignee">
+					<span class="txt"></span><b></b>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="amount">
+				<span>
+				</span>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=315361258874&PassKey=8CA13535191C0943EFB75EEA442E973E" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=315361258874" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+	<tbody>
+		<tr class="sep-row"><td colspan="4"></td></tr>
+		<tr class="tr-th">
+			<td colspan="4">
+				<span class="gap"></span>
+				<span class="dealtime" title="2015-1-19 10:30:42">2025-05-21 21:51:07</span>
+				<span class="number">订单号：
+				<a href="//details.jd.com/normal/item.action?orderid=315238373110&PassKey=8428DD5F506D2D6041E4ED814EECA408" target="_blank" >315238373110</a>
+				</span>
+				<div class="tr-operate">
+					<a href="#none" class="order-del">删除</a>
+				</div>
+			</td>
+		</tr>
+
+		<tr class="tr-bd">
+			<td>
+				<div class="goods-item">
+					<div class="p-img">
+                            <a target="_blank" href="//item.jd.com/9056619.html">
+                                <img src="//img30.360buyimg.com/N6/s60x60_jfs/t24961/348/1234219369/39685/168b57db/5b8f9540N6ddad83a.png" alt="">
+                            </a>
+					</div>
+					<div class="p-msg">
+						<div class="p-name">
+                                    <a target="_blank" href="//item.jd.com/9056619.html">购药开方服务</a>
+						</div>
+					</div>
+				</div>
+				<div class="goods-number">
+						x1
+				</div>
+				<div class="clr"></div>
+			</td>
+			<td rowspan="1">
+				<div class="consignee">
+					<span class="txt">jd_7a0b66d34b793</span><b></b>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="amount">
+				<span>
+						支付金额 ￥0.00
+				</span>
+				</div>
+			</td>
+			<td rowspan="1">
+				<div class="operate">
+					<a href="//details.jd.com/normal/item.action?orderid=315238373110&PassKey=8428DD5F506D2D6041E4ED814EECA408" target="_blank" class="a-link">订单详情</a><br>
+					<a clstag="pageclick|keycount|daipingjia_pingjia_201605191|1" href="//club.jd.com/myJdcomments/orderVoucher.action?ruleid=315238373110" target="_blank" class="btn-def">评价</a>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<!--/ /widget/order-table-list/order-table-list.tpl -->
+
+<!--  /widget/ui-page/ui-page.tpl -->
+<div class="ui-page-wrap clearfix">
+  <div class="ui-page">
+	<span class="text">共6个订单</span>
+	<a rel='2' class='prev-disabled' href='#none'><b></b>上一页</a><a rel='1' class='ui-page-curr' href='javascript:void(0)'>1</a><a class='next-disabled' href='#none'>下一页<b></b></a>
+
+  </div>
+</div>
+<!--/ /widget/ui-page/ui-page.tpl -->
+					</div>
+
+				</div>
+                <div id="shareRecDemo"></div>
+				<div class="mycomment-promo">
+<!--  /widget/show/show.tpl -->
+<div class="mod-main" id="show">
+	<div class="mt">
+		<h3 class="mt-title">京东推荐</h3>
+	</div>
+	<div class="mc">
+		<div class="show-cont">
+		</div>
+		<div class="loading-more J-gotop">
+			<a href="?sort=1">去晒单</a>
+		</div>
+	</div>
+</div>
+<!--/ /widget/show/show.tpl -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- /main -->
+
+<!-- globalService begin-->
+<!--service start-->
+<div id="service-2017">
+	<div class="w">
+		<ol class="slogen">
+			<li class="item fore1">
+				<i>多</i>品类齐全，轻松购物
+			</li>
+			<li class="item fore2">
+				<i>快</i>多仓直发，极速配送
+			</li>
+			<li class="item fore3">
+				<i>好</i>正品行货，精致服务
+			</li>
+			<li class="item fore4">
+				<i>省</i>天天低价，畅选无忧
+			</li>
+		</ol>
+	</div>
+	<div class="jd-help">
+		<div class="w">
+			<div class="wrap">
+				<dl class="fore1">
+					<dt>购物指南</dt>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-29.html">购物流程</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-151.html">会员介绍</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-297.html">生活旅行/团购</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue.html">常见问题</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-136.html">大家电</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/custom.html">联系客服</a></dd>
+				</dl>
+				<dl class="fore2">		
+					<dt>配送方式</dt>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-81-100.html">上门自提</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-81.html">211限时达</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-82.html">配送服务查询</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/109-188.html">配送费收取标准</a></dd>		
+				</dl>
+				<dl class="fore3">
+					<dt>支付方式</dt>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-172.html">货到付款</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-173.html">在线支付</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-176.html">分期付款</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-175.html">公司转账</a></dd>
+				</dl>
+				<dl class="fore4">		
+					<dt>售后服务</dt>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-112.html">售后政策</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-132.html">价格保护</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/130-978.html">退款说明</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//myjd.jd.com/repair/repairs.action">返修/退换货</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//help.jd.com/user/issue/list-50.html">取消订单</a></dd>
+				</dl>
+				<dl class="fore5">
+					<dt>特色服务</dt>	
+					<dd><a target="_blank" href="//paipai.jd.com/auction-list/">夺宝岛</a></dd>
+					<dd><a target="_blank" href="//help.jd.com/user/issue/list-134.html">DIY装机</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//fuwu.jd.com/">延保服务</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//o.jd.com/market/index.action">京东E卡</a></dd>				
+					<dd><a rel="nofollow" target="_blank" href="//mobile.jd.com/">京东通信</a></dd>
+					<dd><a rel="nofollow" target="_blank" href="//smart.jd.com/">京鱼座智能</a></dd>
+				</dl>
+				<span class="clr"></span>
+			</div>
+		</div>
+	</div>
+</div>
+<!--service end-->
+
+<!-- globalService end-->
+
+
+<!-- globalFooter begin-->
+<!--footer start-->
+<div id="footer-2017" Includefile_Footer_id="1002">
+  <div class="w">
+    <div class="copyright_links">
+      <p>
+        <a href="//about.jd.com" target="_blank">关于我们</a
+        ><span class="copyright_split">|</span>
+        <a href="//about.jd.com/contact/" target="_blank">联系我们</a
+        ><span class="copyright_split">|</span>
+        <a href="//help.jd.com/user/custom.html" target="_blank">联系客服</a
+        ><span class="copyright_split">|</span>
+        <a href="//lai.jd.com" target="_blank">合作招商</a
+        ><span class="copyright_split">|</span>
+        <a href="//helpcenter.jd.com/venderportal/index.html" target="_blank"
+          >商家帮助</a
+        ><span class="copyright_split">|</span>
+        <a href="//jzt.jd.com" target="_blank">营销中心</a
+        ><span class="copyright_split">|</span>
+        <a href="//app.jd.com/" target="_blank">手机京东</a
+        ><span class="copyright_split">|</span>
+        <a href="//club.jd.com/links.aspx" target="_blank">友情链接</a
+        ><span class="copyright_split">|</span>
+        <a href="//union.jd.com/index" target="_blank">销售联盟</a
+        ><span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/3WA2zN8wkwc9fL9TxAJXHh5Nj79u/index.html"
+          target="_blank"
+          >京东社区</a
+        ><span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/3TF25tMdrnURET8Ez1cW9hzfg3Jt/index.html"
+          target="_blank"
+          >风险监测</a
+        ><span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/2udA8Qxf3A54dVVseY5CdUMSgQPs/index.html"
+          target="_blank"
+          >质量公告</a
+        ><span class="copyright_split">|</span>
+        <a href="//about.jd.com/privacy/" target="_blank">隐私政策</a
+        ><span class="copyright_split">|</span>
+        <a href="//gongyi.jd.com" target="_blank">京东公益</a
+        ><span class="copyright_split">|</span>
+        <a href="//corporate.jd.com/" target="_blank">Media & IR</a>
+      </p>
+    </div>
+    <div class="copyright_info">
+      <p>
+        <a
+          href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11000002000088"
+          target="_blank"
+          >京公网安备 11000002000088号</a
+        ><span class="copyright_split">|</span
+        ><span
+          ><a href="http://beian.miit.gov.cn" target="_blank"
+            >京ICP备11041704号</a
+          ></span
+        ><span class="copyright_split">|</span>
+        <a
+          href="//h5.m.jd.com/pc/dev/3T3No18XR8k8rpLGLGhgbJ1StAFq/index.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          >ICP</a
+        ><span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/2zRnBcZVhdAcWBMvBnoRcUdi3HBt/index.html"
+          target="_blank"
+          >药品医疗器械网络信息服务备案</a
+        ><span class="copyright_split">|</span
+        ><a
+          href="//pro.jd.com/mall/active/MZXpsnbHS3omkFAk4R4jYwXTb4c/index.html"
+          target="_blank"
+          >自营医疗器械经营资质</a
+        ><span class="copyright_split">|</span
+        ><a
+          href="//pro.jd.com/mall/active/2pwvdCM94gBdWruSu82PkqzKyi3U/index.html"
+          target="_blank"
+          >药品网络交易第三方平台备案凭证</a
+        ><span class="copyright_split">|</span
+        ><span>新出发京零 字第大120007号</span>
+      </p>
+      <p>
+        <span>互联网出版许可证编号新出网证(京)字150号</span
+        ><span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/3bVDLXHdwVmdQksGF8TtS7ocq1NY/index.html"
+          target="_blank"
+          >出版物经营许可证</a
+        ><span class="copyright_split">|</span
+        ><span>违法和不良信息举报电话：4006561155</span>
+      </p>
+      <p>
+        <span class="copyright_text"
+          >Copyright &copy; 2004 -
+          <em id="copyright_year">2019</em> 京东JINGDONG 版权所有</span
+        ><span class="copyright_split">|</span
+        ><span>消费者维权热线：4006067733</span>
+        <a
+          href="//pro.jd.com/mall/active/38PitHBfR7ZopNHRSHnuuWR5AMDL/index.html"
+          target="_blank"
+          class="copyright_license"
+          >经营证照</a
+        >
+        <span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/36mqawDTyFwQpodmiJGf6bvPA8hs/index.html"
+          target="_blank"
+          class="mod_business_license"
+          >医疗器械第三方平台备案凭证（京）网械平台备字（2023）第00013号</a
+        >
+        <span class="copyright_split">|</span>
+        <a
+          href="//pro.jd.com/mall/active/5oanqbW74QJ5NLaKPx5QaWpFonw/index.html"
+          target="_blank"
+          class="mod_business_license"
+          >营业执照</a
+        >
+        <span class="copyright_split">|</span>
+        <a
+          href="//h5.m.jd.com/pc/dev/3YxBvN6m5TsRyVCvDSeEh7awmLB4/index.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          >增值电信业务经营许可证</a
+        >
+      </p>
+      <p>
+        <span>京东旗下网站：</span>
+        <a href="https://www.jdpay.com/" target="_blank">京东钱包</a
+        ><span class="copyright_split">|</span>
+        <a href="https://www.jdcloud.com" target="_blank">京东云</a>
+      </p>
+    </div>
+    <p class="copyright_auth">
+      <script type="text/JavaScript">
+        function CNNIC_change(eleId){var str= document.getElementById(eleId).href;var str1 =str.substring(0,(str.length-6));str1+=CNNIC_RndNum(6);
+        				document.getElementById(eleId).href=str1;}function CNNIC_RndNum(k){var rnd=""; for (var i=0;i
+        				< k;i++) rnd+=Math.floor(Math.random()*10); return rnd;};(function(){var d=new Date;document.getElementById(
+        				 "copyright_year").innerHTML=d.getFullYear()})();
+      </script>
+      <a
+        id="urlknet"
+        class="copyright_auth_ico copyright_auth_ico_2"
+        onclick="CNNIC_change('urlknet')"
+        oncontextmenu="return false;"
+        name="CNNIC_seal"
+        href="https://ss.knet.cn/verifyseal.dll?sn=2008070300100000031&ct=df&pa=294005"
+        target="_blank"
+        >可信网站信用评估</a
+      >
+      <a
+        class="copyright_auth_ico copyright_auth_ico_3"
+        href="https://cyberpolice.mps.gov.cn/"
+        target="_blank"
+        >网络警察提醒你</a
+      >
+      <a
+        class="copyright_auth_ico copyright_auth_ico_4"
+        href="https://search.szfw.org/cert/l/CX20120111001803001836"
+        target="_blank"
+        >诚信网站</a
+      >
+      <a
+        class="copyright_auth_ico copyright_auth_ico_5"
+        href="https://www.12377.cn"
+        target="_blank"
+        >网上有害信息举报专区</a
+      >
+      <a
+        class="copyright_auth_ico copyright_auth_ico_6"
+        href="https://www.12377.cn/node_548446.htm"
+        target="_blank"
+        >网络举报APP下载</a
+      >
+      <a
+        class="copyright_auth_ico copyright_auth_ico_7"
+        href="https://ggfw.cnipa.gov.cn/PatentCMS_Center?fromsite=www.jd.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="
+          background-image: url('//img12.360buyimg.com/imagetools/jfs/t1/89057/27/24131/19491/621c3949E053e39b3/9e2e3ec54268ac9b.png');
+          overflow: hidden;
+          display: inline-block;
+          width: 103px;
+          height: 32px;
+          line-height: 1000px;
+          background-size: cover;
+        "
+        >国家知识产权公共服务网</a
+      >
+    </p>
+  </div>
+</div>
+<!--footer end-->
+
+<!-- globalFooter end-->
+
+<!-- /script 弹窗模板-->
+<!--送京豆规则弹窗-->
+<!-- /script 弹窗模板-->
+<script type="text/html" id="jdbeanTpl">
+   <div class="jdbean-rule">
+   	<div class="comt-rule-box">
+   		<div class="top">
+        <div class="top-header">
+            <div class="top-header-banner" hidden>
+                <img class="top-header-banner-img" src="//club.jd.com/images/banner.png" alt=""/>
+            </div>
+            <div class="top-title">
+                <img class="top-title-img" style="width: 150px; height: 20px" src="//club.jd.com/images/banner-title.png" alt="" />
+            </div>
+            <div class="top-content" style="margin-top: 20px;">
+                <div class="top-content-icon" style="margin-left: 0.467rem;">
+                    <img class="top-content-icon-img" src="//club.jd.com/images/icon_write.png" alt="" />
+                    <!--<span>写文字</span>-->
+                </div>
+                <img class="top-title-add" src="//club.jd.com/images/icon_add.png" alt="" />
+                <div class="top-content-icon">
+                    <img class="top-content-icon-img" src="//club.jd.com/images/icon_pic.png" alt="" />
+                    <!--<span>写文字</span>-->
+                </div>
+                <img class="top-title-add" src="//club.jd.com/images/icon_add.png" alt="" />
+                <div class="top-content-icon" style="margin-right: 0.467rem;">
+                    <img class="top-content-icon-img" src="//club.jd.com/images/icon_service.png" alt="" />
+                    <!--<span>写文字</span>-->
+                </div>
+            </div>
+            <div class="top-content">
+                <div class="top-content-icon" style="flex: 0.3; -webkit-flex: 0.3;">
+                    <span>写文字</span>
+                </div>
+                <div class="top-content-icon" style="flex: 0.4; -webkit-flex: 0.4;">
+                    <span>晒图</span>
+                </div>
+                <div class="top-content-icon" style="flex: 0.3; -webkit-flex: 0.3;">
+                    <span>服务评价</span>
+                </div>
+            </div>
+            <div class="top-service-time">
+                <img class="top-service-time-img" src="//club.jd.com/images/icon_service_time.png" alt="" />
+                <span>评价时效：60天内可首评，90天内可评价服务，180天内可追评</span>
+            </div>
+        </div>
+    </div>
+    <div class="center">
+        <div class="center-double center-radius">
+            <img class="img1" src="//club.jd.com/images/title-double-reward.png" alt="" />
+            <p>首次参与评价</p>
+            <p style="margin-top: 0.08rem">参与“评价官”活动奖励</p>
+        </div>
+        <div class="center-no-reward center-radius">
+            <img class="img2" src="//club.jd.com/images/title-no-reward.png" alt="" />
+            <p>评价内容无意义</p>
+            <p style="margin-top: 0.08rem">晒图审核不通过</p>
+            <p style="margin-top: 0.08rem">退货/刷单致京豆收回</p>
+        </div>
+    </div>
+    <div class="separate"></div>
+    <div class="bottom">
+        <div class="bottom-title">
+            <img src="//club.jd.com/images/bottom-title-img.png" alt="" />
+        </div>
+        <div class="bottom-content">
+            <div class="bottom-content-ref">
+                <p class="p1">1.有参考价值的评价</p>
+                <p class="p2">优秀案例</p>
+                <p class="p3">有价值的商品及购物体验，多角度清晰的图片及视频</p>
+                <div class="bottom-content-ref-sample">
+                    <div class="bottom-content-ref-sample-textarea"
+                        readonly="readonly">Sony的这款耳机种草了很久，入手后满是惊喜，颜值非常高，是华丽而低调的红色，非常有质感；音质很柔，高低音清晰，开启降噪模式，完全隔绝周围噪音；亲测蓝牙效果还不错，右耳耳机可触控操作，非常炫酷！物流也非常快，第二天准时到达，包装非常用心，正在煲机中，完全物超所值！
+                    </div>
+                    <div class="bottom-content-ref-sample-img">
+                        <img src="//club.jd.com/images/product/pro-1.png" alt="" />
+                        <img src="//club.jd.com/images/product/pro-2.png" alt="" />
+                        <img src="//club.jd.com/images/product/pro-3.png" alt="" />
+                        <img src="//club.jd.com/images/product/pro-4.png" alt="" />
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-content-ref">
+                <p class="p2">错误案例</p>
+                <p class="p3">无关、重复的文字；无关图片；盗图、低质、不清晰</p>
+                <div class="bottom-content-ref-sample">
+                    <span class="bottom-content-ref-sample-textarea" style="height: 0.293rem; display: inherit;">这款耳机挺好的，好评！好评！</span>
+                    <div class="bottom-content-ref-sample-img">
+                        <img style="margin-top: 30px" src="//club.jd.com/images/product/pro-5.png" alt="" />
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-video">
+                <p class="p1">2.视频拍摄攻略</p>
+                <div class="bottom-video-content">
+                    <video id="myVideo" controls="controls" webkit-playsinline="webkit-playsinline" playsinline="playsinline" width="300px" height="150px">
+                        <source src="https://jvod.300hu.com/vod/product/29c911f9-1776-45d3-982e-225fc421b7b9/1393f025d4784496a334aa0f2a056750.mp4?source=2&h265=h265/18799/81e6480aed884242b7765f426fe4ed8b.mp4" type="video/mp4">
+                        your browser does not support the video tag
+                    </video>
+                </div>
+                <div  class="bottom-video-content bottom-video-content-absolute">
+                    <img class="bottom-video-content-bg" src="//club.jd.com/images/product/pro-video.png" alt="" />
+                    <a class="bottom-video-content-play bottom-video-content-play-chrome" onclick="play()">
+                        <img id="bottom-video-content-play" src="//club.jd.com/images/icon_video_play.png" alt="" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="rules">
+        <img class="rules-img" src="//club.jd.com/images/title_rules.png" alt="" />
+    </div>
+    <h5>一、评价晒单时效</h5>
+    <div class="smc">
+    客户可在订单完成后60日内对所购商品作出首次评价晒单，90日内对商品服务作出评价，180天进行追加评价（某些特殊品类除外），并且在任何时间均可对商城全量评价进行回复。<br>
+    </div>
+    <h5>二、评价晒单说明</h5>
+    <div class="smc">
+        1.  一个订单的商品购买了多件，评价的时候只是当成一件商品来评。<br>
+        2.  评价内容不得包含链接地址，否则不能提交。<br>
+        3.  被禁言的用户在禁言期间不能提交评价，可联系客服咨询。<br>
+        4.  评价列表删除：已发布的评价，可在评价发布成功30天内进行删除。删除后，评价记录将在评价中心及商品-评价列表同时消失。若有追评，追评也一并删除。删除操作不可恢复，请谨慎操作。<br>
+        5.  评价列表隐藏：如您因为隐私原因想要隐藏评价中心的评价记录，可在评价发布成功180天内进行隐藏，隐藏后，评价将在评价中心消失，但仍会以匿名的形式存在于商品-评价列表中。隐藏操作不可恢复，请谨慎操作。<br>
+        6.  评价回复说明：京享值满300的个人用户可以使用评价回复功能，企业用户不可使用评价回复功能，一天最多可以回复20条评价，针对同一条评价的回复不超过5条，否则5条回复都会被屏蔽。对同一条评价超过3条重复的回复，则3条重复的回复都会被屏蔽。<br>
+        7.  退换货订单商品评价：若退货前未进行评价，则退货后不可对该订单商品进行评价；换货订单商品评价：若换前未进行评价，则换货后可对换前订单商品进行评价；无论换前订单商品是否完成评价，换后新订单商品可正常评价；若换前订单商品已评价，换后新订单的商品也提交评价，则换前的订单商品评价不展示（但不扣除该订单商品评价已获京豆），只展示换后订单商品评价（换后订单商品评价将不再给予京豆奖励）。<br>
+        8.  全额退款完成的订单商品评价不再于前台展示，且评价获得的京豆将被扣除。<br>
+        9.  评价晒单及评价回复发表成功后除展示在商品详情页、评价中心和个人主页外，还可能以完整的或概要的形式展示在app首页、搜索、店铺、发现频道等其他位置。<br>
+        10.  隐私保护：为保护用户隐私，在商品详情页评价模块会对用户昵称星号脱敏展示，比如：小***西。<br>
+        11.  评价晒单如审核不通过，无法再次评价。<br>
+    </div>
+    <h5>三、评价晒单送京豆奖励规则</h5>
+    <div class="smc">
+        基于评价晒单规则的先决条件，对符合相关条件的商品评价和晒单给予一定数量的京豆奖励（追加评价不参与京豆奖励）。<br>
+        1、评价文本发豆规则：<br>
+        <div class="mt5 mb5">
+            <table class="tb-void">
+            <colgroup>
+            <col width="50%">
+            <col>
+            </colgroup>
+            <tbody>
+            <tr>
+                <td colspan="2">评价文字发豆（评价字数>=10）</td>
+            </tr>
+            <tr>
+                <td>商品实付金额（元）</td>
+                <td>京豆（个）</td>
+            </tr>
+            <tr>
+                <td>20≤实付金额＜100</td>
+                <td>10</td>
+            </tr>
+            <tr>
+                <td>实付金额≥100</td>
+                <td>20</td>
+            </tr>
+            </tbody>
+            </table>
+        </div>
+        说明：对实付金额大于20元的单件商品（京东国际、赠品、京东到家和虚拟商品除外)进行评价，评价字数达到10个字并通过审核后，会为您发放京豆。（若一个订单中包括A、B两件商品，订单实付30元，其中A商品有5件，实付25元。则A商品单件实付5元，根据规则5<20元，不满足送豆标准）<br>
+        如下类型无意义的评价文字不会获得京豆（包含但不限于）：<br>
+        1）评价内容<10个字<br>
+        2）在本条评价内容中，内容重复且无意义:<br>
+        - 重复规则：相同的内容重复出现3次以上，重复内容字数超过评价总字数的30%<br>
+        - 拷贝自己或者他人评价内容超过80%以上（以字数为准）<br>
+        3）评价内容与所购商品无关，没有任何参考价值，被5名以上网友举报或违反法律、法规的<br>
+        2、晒图/晒视频发豆规则：<br>
+        <div class="mt5 mb5">
+            <table class="tb-void">
+            <colgroup>
+            <col width="50%">
+            <col>
+            </colgroup>
+            <tbody>
+            <tr>
+                <td colspan="2">晒图/晒视频发豆</td>
+            </tr>
+            <tr>
+                <td>单件商品实付金额（元）
+                </td>
+                <td>京豆(个)
+                </td>
+            </tr>
+            <tr>
+                <td>20≤实付金额＜100</td>
+                <td>10</td>
+            </tr>
+            <tr>
+                <td>实付金额≥100</td>
+                <td>20</td>
+            </tr>
+            </tbody>
+            </table>
+        </div>
+        说明：对实付金额大于20元的单件商品（京东国际、自营普通图书、赠品、京东到家和虚拟商品除外)上传图片/视频进行晒单，并通过审核后，会为您发放京豆。（若一个订单中包括A、B两件商品，订单实付30元，其中A商品有5件，实付25元。则A商品单件实付5元，根据规则5<20元，不满足送豆标准）<br>
+        3、物流服务评价发豆规则：如您购买的是京东自营商品，在进行了物流服务评价后，根据订单金额为您发放京豆。<br>
+        <div class="mt5 mb5">
+            <table class="tb-void">
+            <colgroup>
+            <col width="50%">
+            <col>
+            </colgroup>
+            <tbody>
+            <tr>
+                <td>订单金额（元）</td>
+                <td>京豆(个)</td>
+            </tr>
+            <tr>
+                <td>京东配送订单金额≥200</td>
+                <td>10</td>
+            </tr>
+            </tbody>
+            </table>
+        </div>
+        4、京豆额外奖励说明<br>
+        1）新用户完成首次评价，可享双倍京豆奖励（基础送豆量*2）。<br>
+        2）评价官用户翻倍送豆：为寻找有态度，爱分享的评价用户，京东成立评价官俱乐部，评价官用户发表优质评价可获得2倍基础京豆奖励。<br>
+        优质评价说明：<br>
+        a、老评价官体系下的标准如下：（9.1.2及以下京东app版本为老评价官体系）<br>
+        -100字及以上的文字评价+图/视频的审核通过的评价；<br>
+        -文字及图/视频均需原创且与商品相关，内容健康且有参考价值。被系统识别为无意义的凑字数评价，重复搬用自己或他人的评价均不算作优质评价。<br>
+        -评价官用户若被冻结，则无法享受优质评价2倍京豆奖励，解冻后才可继续享受，具体见App端评价官规则。 <br>
+        b、新评价官体系下的标准如下：（9.1.4及以上京东app版本为新评价官体系）<br>
+        -60字及以上的文字评价+2图/1个视频的审核通过的评价；<br>
+        -文字及图/视频均需原创且与商品相关，内容健康且有参考价值。被系统识别为无意义的凑字数评价，重复搬用自己或他人的评价均不算作优质评价。<br>
+        3）  优质评价特殊逻辑：<br>
+        京东评价可基于消费者体验、商家经营及平台运营需要，调整优质评价适用范围（根据不同商品类目设定优质评价字数、图片、视频的数量）或相关计算逻辑，并将第一时间通知到消费者。<br>
+        4）  彩蛋评价送豆说明：<br>
+        您待评价的商品会随机获得彩蛋评价资格， 获得彩蛋评价资格页面会有“彩蛋评价”提示；当您点击“彩蛋评价”进入评价编辑页面即开始计时，需在10分钟内完成50字+图/视频的评价，评价后，我们会在1-2个工作日进行审核，审核通过后即可获得彩蛋额外奖励20个京豆，如超时未完成评价，则无法获得彩蛋额外京豆奖励；<br>温馨提示：彩蛋评价随机获得，也会不定期消失，获得彩蛋资格的评价请尽快参与。<br>
+        </div>
+        <h5>四、京豆扣除规则</h5>
+        <div class="smc">
+        当产生以下行为时，已获得的京豆奖励将被扣除：<br>
+        1、商品或服务退货后，因该订单评价内容已获得的京豆奖励会被扣除。<br>
+        2、被系统识别为刷单的评价，对应已获得的京豆奖励会被扣除。<br>
+        3、审核不通过的评价内容，对应已获得的京豆奖励会被扣除。<br>
+        4、被折叠的评价，对应已获得的京豆奖励会被扣除。<br>
+        5、评价删除后，对应已获得的京豆奖励会被扣除。<br>
+        </div>
+        <h5>五、评价晒单规则</h5>
+        <div class="smc">
+        【原则宗旨】<br>
+        客户应基于真实交易作出合法、公正、客观、真实的评价晒单，反映商品或服务的真实情况，鼓励原创，杜绝剽窃，发表无意义、违反法律法规的评价晒单内容行为，为其他消费者在购物决策过程和平台经营过程中提供有效的参考。<br>
+        【违规处理】<br>
+        京东平台秉持公平、公正、真实的原则，将采取有限的技术手段对恶意评价、虚假评价、违法违规等不当评价内容作出处理，包含但不限制为屏蔽评价内容、折叠、删除等，并且对情节严重并且频繁违规的用户进行禁言处理。<br>
+        为保障消费者、京东平台及经营商户的正当权益，平台严厉打击以领券、优惠等名义诱导为公众号、小程序等其他平台引流的欺骗行为，对于发布此类评价、追评、回复信息的用户，将采取不限于删除内容、禁言等违规处理措施。<br>
+        【审核规则】<br>
+        京东平台将对评价和晒单内容进行审核，符合规则且审核通过的评价和晒单才能展示给其他用户。<br>
+        1、对于审核不通过的评价晒单，不能获得京豆奖励，且文字、晒图均不能被展示出来，对于参考意义不大的评价同样不能获得京豆奖励，将在评价列表做折叠展示，具体参照折叠评价规则。<br>
+        2、如果客户发布的评价未审核通过次数大于等于5条，则一年内该客户发表的评价晒单均不会获得京豆奖励。<br>
+        3、评价晒单审核会在1-2个工作日内完成，遇节假日顺延至3-5个工作日完成。<br>
+        4、客户发布的评价、晒图和回复内容中有下列情形之一的，审核不予通过展示（包含但不限于以下内容）：<br>
+        &nbsp;1）含有涉及政治有害、色情低俗、暴力、反政府言论、赌博、毒品等严重违反法律法规的内容<br>
+        &nbsp;2）评价文字或晒单与所购商品无关<br>
+        &nbsp;3）评价晒图与所购商品无关或涉嫌泄露隐私的图片，包括但不限于：商品详情页截图、含其他网站水印图、订单截图、与客服/商家聊天截图等 <br>
+        &nbsp;4）含有广告信息、辱骂、污言秽语、泄露他人隐私信息、严重引人不适等违反公序良俗的内容<br>
+        &nbsp;5）因刷单、利用评价谋取不当利益、违反公平竞争原则等恶意行为产生的评价<br>
+        &nbsp;6）含有与事实不符或无法举证的虚假评价内容<br>
+        &nbsp;7）未经过他人同意，盗用他人内容和图片，经权利人举报，查证属实的<br>
+        &nbsp;8）未对身体或产品敏感部位进行有效遮掩或打马赛克，包括但不限于：成人用品、贴身衣服类等<br>
+        &nbsp;9）复制自己或者他人评价内容超过80%以上（以字数为准）,无法判断评价真实性的<br>
+        &nbsp;10）未正确使用标点符号，严重影响他人阅读的<br>
+        &nbsp;11）评价内容没有任何参考价值、被5名以上网友举报或者违反法律、法规的<br>
+        【折叠规则】<br>
+        为展示客户真实有价值的评价内容，为其他消费者在购物决策过程提供有效参考，京东对参考意义不大的评价内容进行折叠，如需查看可下拉至评价末端点击“继续查看”， 被折叠的评价无法获得京豆奖励。<br>
+        有下列情形之一的，评价内容将会被折叠展示：<br>
+        1、重复内容：相同的内容重复出现3次以上，重复内容字数超过评价总字数的30%。<br>
+        - 例子：“包装的很好，使用方便，质量很不错，质量很不错，质量很不错......”<br>
+        2、拷贝自己或者他人评价内容超过80%以上（以字数为准）<br>
+        3、评价内容为“随机文字、乱码、符号、图片”等<br>
+        4、评价内容与所购买商品无关，无意义的没有任何参考价值的内容。<br>
+        5、用户评价内容不包含受评商品、服务、物流相关的相关评价。<br>
+        - 评价内容为"段子、新闻、文章、诗词"等与商品、服务、物流无关的内容。<br>
+        例子：“今天天气不错，挺风和日丽的......”“这是一个评价模板 ......”<br>
+        6、评价内容为“广告内容、兼职、招聘、转卖商品、返利网、引导用户扫码、加联系方式”等内容。<br>
+        - 例子：“网购就用XXX，省钱又赚钱，搜索XXX免费使用，便宜。”“天干物燥，补水我一直用XX面膜，效果不错有需要的加微信：XXXXX”<br>
+        7、其他与交易商品或服务不具有关联性、违法或侵害相关方合法权益的评价。<br>
+       【好评率计算规则】<br>
+        （1）好评定义：用户提交的4-5星评价为好评，会计入好评数和好评率的计算。<br>
+        （2）订单完成后3天内若用户未做出评价，则系统会自动算作默认评价计入评价总数，但用户仍可在订单完成后的60天内对商品发表首评。<br>
+</div>
+   	</div>
+   	<div class="btnbox"><a href="javascript:;" class="btn-primary J-jdbean-close">知道了</a></div>
+   </div>
+
+    </script>
+<!-- /js 位置 -->
+<script type="text/javascript" src="//misc.360buyimg.com/jdf/??lib/jquery-1.6.4.js"></script>
+
+<!-- globalAnalysis begin-->
+<script type="text/javascript">
+    (function () {
+        var ja = document.createElement('script');
+        ja.type = 'text/javascript';
+        ja.async = true;
+        ja.src = document.location.protocol+'//wl.jd.com/wl.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(ja, s);
+    })();
+</script>
+<!-- globalAnalysis end-->
+<script type="text/javascript">
+    seajs.use('//misc.360buyimg.com/user/myjd/comment/1.0.0/js/main.js')
+    //临时代码处理到家订单弹框处理
+    $(function(){
+        $('a.a-homeOrder').hover(
+            function(){
+                $(this).siblings("div.prompt-03").show();
+            },
+            function(){
+                $(this).siblings("div.prompt-03").hide();
+            }
+        )
+    });
+</script>
+
+<script type="text/javascript" src="//misc.360buyimg.com/user/myjd/comment/1.0.1/widget/??show/show.js" source="widget"></script>
+</body>
+</html>

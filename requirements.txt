@@ -1,5 +1,8 @@
-jieba
-requests
-lxml
-zhon
-pyyaml
+jieba==0.42.1
+requests==2.31.0
+lxml==4.9.3
+zhon==1.1.5
+pyyaml==6.0.1
+PyQt6==6.5.2
+PyInstaller==6.2.0
+Pillow==10.1.0  # 用于创建图标
