@@ -8,6 +8,7 @@ import yaml
 import threading
 import traceback
 import requests
+import time
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                             QLabel, QLineEdit, QPushButton, QTextEdit, QMessageBox, 
                             QFileDialog, QTabWidget, QProgressBar, QSplitter, QComboBox)
@@ -45,12 +46,16 @@ class JDAutoCommentGUI(QMainWindow):
         self.user_config_path = "./config.user.yml"
         self.cookie = ""
         self.comment_thread = None
+        self.pre_loaded_orders = None  # 用于存储预加载的订单数据
         
         # 创建必要的目录
         self.ensure_directories()
         
         self.init_ui()
         self.load_cookie()
+        
+        # 尝试显示预加载的订单数据
+        self.display_preloaded_orders()
 
     def ensure_directories(self):
         """确保必要的目录存在"""
@@ -181,7 +186,6 @@ class JDAutoCommentGUI(QMainWindow):
         
         # 添加文件日志处理器
         try:
-            import time
             log_file = os.path.join(log_dir, f"jd_auto_comment_{time.strftime('%Y%m%d_%H%M%S')}.log")
             file_handler = logging.FileHandler(log_file, encoding='utf-8')
             file_handler.setFormatter(formatter)
@@ -201,6 +205,35 @@ class JDAutoCommentGUI(QMainWindow):
                 logger.removeHandler(h)
             logger.addHandler(handler)
             logger.setLevel(logging.INFO)
+    
+    def display_preloaded_orders(self):
+        """显示预加载的订单数据"""
+        if hasattr(self, 'pre_loaded_orders') and self.pre_loaded_orders:
+            try:
+                # 格式化数据显示
+                order_info = "----".join([f"{i} {self.pre_loaded_orders[i]}" for i in self.pre_loaded_orders])
+                logging.info(f"已预加载评价数据: {order_info}")
+                
+                # 显示提示信息
+                if sum(self.pre_loaded_orders.get(k, 0) for k in ['待评价订单', '待追评', '服务评价']) > 0:
+                    message = f"发现待处理的订单:\n"
+                    if self.pre_loaded_orders.get('待评价订单', 0) > 0:
+                        message += f"- {self.pre_loaded_orders['待评价订单']} 个待评价订单\n"
+                    if self.pre_loaded_orders.get('待追评', 0) > 0:
+                        message += f"- {self.pre_loaded_orders['待追评']} 个待追评\n"
+                    if self.pre_loaded_orders.get('服务评价', 0) > 0:
+                        message += f"- {self.pre_loaded_orders['服务评价']} 个服务评价\n"
+                    message += "\n点击\"开始评价\"按钮开始自动评价流程。"
+                    
+                    QTimer.singleShot(1000, lambda: QMessageBox.information(
+                        self, 
+                        "发现待处理订单", 
+                        message
+                    ))
+                else:
+                    logging.info("当前没有需要处理的订单")
+            except Exception as e:
+                logging.error(f"显示预加载订单数据时出错: {e}")
     
     def load_cookie(self):
         # 先尝试加载用户配置文件
@@ -423,8 +456,13 @@ class JDAutoCommentGUI(QMainWindow):
             # 更新opts中的Cookie格式并确保它是字符串
             opts["config"]["cookie"] = cookie
             
+            # 使用全局会话对象进行所有请求，确保Cookie一致性
+            session = requests.Session()
+            
+            # 将会话添加到opts字典，以便评价函数可以使用相同的会话
+            opts["session"] = session
+            
             # 预先设置auto_comment_plus中的headers变量
-            # 使用全局变量声明确保变量正确更新
             auto_comment_plus_mod.headers = {
                 "Cookie": cookie,
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
@@ -475,14 +513,9 @@ class JDAutoCommentGUI(QMainWindow):
             # 先进行单独的Cookie验证
             logging.info("正在验证Cookie有效性...")
             try:
-                # 使用会话对象进行请求
-                test_session = requests.Session()
-                
-                # 临时禁用SSL验证，以防SSL错误导致的连接问题
-                test_session.verify = True
-                
+                # 使用会话对象，确保后续请求复用相同的会话和Cookie
                 test_url = 'https://order.jd.com/center/list.action'
-                test_resp = test_session.get(test_url, headers=auto_comment_plus_mod.headers, allow_redirects=False, timeout=15)
+                test_resp = session.get(test_url, headers=auto_comment_plus_mod.headers, allow_redirects=False, timeout=15)
                 
                 if test_resp.status_code == 302 and 'login' in test_resp.headers.get('Location', ''):
                     logging.error("Cookie验证失败: 被重定向到登录页面")
@@ -505,17 +538,45 @@ class JDAutoCommentGUI(QMainWindow):
                 # 尝试继续执行，可能仍然有效
                 logging.warning("尝试继续执行评价流程...")
             
+            # 预热京东评价页面，提高后续获取订单号的成功率
+            try:
+                logging.info("预热京东评价页面...")
+                preheat_urls = [
+                    "https://club.jd.com/myJdcomments/myJdcomment.action",
+                    "https://club.jd.com/myJdcomments/myJdcomment.action?tabType=newComment",
+                    "https://club.jd.com/myJdcomments/myJdcomment.action?tabType=reviewComment",
+                    "https://club.jd.com/myJdcomments/myJdcomment.action?tabType=serviceComment"
+                ]
+                
+                for url in preheat_urls:
+                    logging.debug(f"访问页面: {url}")
+                    resp = session.get(url, headers=auto_comment_plus_mod.headers, timeout=15)
+                    logging.debug(f"预热页面状态码: {resp.status_code}")
+                    time.sleep(1)  # 短暂暂停避免请求过快
+                
+                logging.info("预热完成")
+            except Exception as e:
+                logging.warning(f"预热页面时出错: {str(e)}")
+                # 继续进行，这只是优化步骤
+            
             # 执行评价获取流程
             try:
                 # 包装在try-except块中以捕获所有可能的错误
                 result = None
-                try:
-                    # 设置超时更长一些，避免网络波动导致失败
-                    result = auto_comment_plus_mod.No(opts)
-                except Exception as e:
-                    logging.error(f"获取评价数据时出错: {str(e)}")
-                    import traceback
-                    logging.error(f"错误堆栈: {traceback.format_exc()}")
+                
+                # 如果有预加载的订单数据，优先使用
+                if hasattr(self, 'pre_loaded_orders') and self.pre_loaded_orders:
+                    logging.info("使用预加载的订单数据")
+                    result = self.pre_loaded_orders
+                else:
+                    # 否则重新获取
+                    try:
+                        logging.info("重新获取订单数据...")
+                        result = auto_comment_plus_mod.No(opts)
+                    except Exception as e:
+                        logging.error(f"获取评价数据时出错: {str(e)}")
+                        import traceback
+                        logging.error(f"错误堆栈: {traceback.format_exc()}")
                     
                 if not result:
                     logging.error("获取评价数据失败，请检查Cookie是否有效")

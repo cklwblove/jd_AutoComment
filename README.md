@@ -54,8 +54,9 @@ python auto_comment_plus.py [--dry-run] [-lv DEBUG|INFO|WARNING|ERROR] [-o log_f
 ```
 
 参数说明：
+
 - `--dry-run`：模拟运行，不实际提交评价
-- `-lv, --log-level`：设置日志级别 
+- `-lv, --log-level`：设置日志级别
 - `-o, --log-file`：指定日志文件路径
 
 > 注意：`auto_comment_plus_mod.py` 是优化版，对获取订单信息的方法进行了增强，推荐使用。
@@ -63,16 +64,13 @@ python auto_comment_plus.py [--dry-run] [-lv DEBUG|INFO|WARNING|ERROR] [-o log_f
 ### 使用步骤
 
 1. 获取京东Cookie
+
    - 登录京东网页版：https://www.jd.com/
    - 进入评价页面：https://club.jd.com/myJdcomments/myJdcomment.action
    - 浏览器开发者工具(F12) -> 网络 -> 刷新页面 -> 找到请求头中的Cookie
-   
 2. 在程序界面输入Cookie，点击"保存Cookie"
-
 3. 选择日志级别，建议普通用户使用"INFO"级别，排查问题使用"DEBUG"级别
-
 4. 点击"开始评价"按钮开始自动评价过程
-
 5. 如需停止，点击"停止评价"按钮
 
 ## 常见问题解决
@@ -82,19 +80,20 @@ python auto_comment_plus.py [--dry-run] [-lv DEBUG|INFO|WARNING|ERROR] [-o log_f
 如果遇到"获取不到订单信息"或"Cookie出现错误"的提示：
 
 1. 确认Cookie是否有效
+
    - 重新获取最新的Cookie（注意复制完整，包括所有分号和值）
    - 确保包含关键Cookie值：pin, _pst, thor, TrackID
-
 2. 检查日志文件
+
    - 使用DEBUG级别运行程序：`python auto_comment_plus_launcher.py --cli -lv DEBUG -o debug.log`
    - 查看生成的debug.log文件和debug_*.html文件找出问题
-
 3. 切换评价页面
+
    - 建议使用电脑端直接访问：https://club.jd.com/myJdcomments/myJdcomment.action
    - 确保账号中有待评价的订单
-
 4. 尝试使用增强版本
-   - 使用`auto_comment_plus_mod.py`代替`auto_comment_plus.py`
+
+   - 使用 `auto_comment_plus_mod.py`代替 `auto_comment_plus.py`
    - 增强版本添加了更多的页面解析方法和错误处理
 
 ## 图形界面新功能
@@ -157,9 +156,9 @@ more_cookie分支是有需要多账号进行批量评论诞生的分支。
 ### 安装依赖库
 
 ```bash
-pip install -r requirements.
+ pip install -r requirements.
 # or
-python3 -m pip install -r requirements
+python3 -m pip install -r requirements --break-system-packages
 
 请用户自行判断使用哪个分支。
 
@@ -244,3 +243,56 @@ optional arguments:
 ## 证书
 
 ![AUR](https://img.shields.io/badge/license-MIT%20License%202.0-green.svg)
+
+## 常见问题解决方案
+
+### 遇到"发布异常，请稍后重试"错误
+
+如果您遇到以下错误：
+
+```
+发送请求后的状态码:200,text:{"success":false,"resultCode":null,"error":"发布异常，请稍后重试....!"}
+```
+
+#### 解决方案：
+
+1. **更新Cookie（最重要）**
+
+   - 重新登录京东账号
+   - 访问 https://club.jd.com/myJdcomments/myJdcomment.action
+   - 按F12打开开发者工具
+   - 在Network标签页找到请求，复制完整的Cookie
+   - 更新config.yml中的cookie字段
+2. **降低请求频率**
+
+   - 工具已自动增加了请求间隔时间
+   - 普通评价：20秒间隔
+   - 追评：20秒间隔
+   - 服务评价：25秒间隔
+3. **使用重试机制**
+
+   - 工具现在会自动重试失败的请求
+   - 每次重试会增加等待时间
+   - 最多重试3次
+4. **检查账号状态**
+
+   - 确保账号没有被限制评价权限
+   - 确保有待评价的订单
+   - 避免在高峰期使用
+
+#### Cookie获取步骤：
+
+1. 打开浏览器，登录京东
+2. 访问：https://club.jd.com/myJdcomments/myJdcomment.action
+3. 按F12打开开发者工具
+4. 点击Network标签
+5. 刷新页面
+6. 找到myJdcomment.action请求
+7. 复制Request Headers中的完整Cookie
+8. 粘贴到config.yml的cookie字段中
+
+#### 注意事项：
+
+- Cookie有时效性，建议获取后立即使用
+- 如果仍然失败，请等待一段时间再试
+- 避免同时运行多个评价程序

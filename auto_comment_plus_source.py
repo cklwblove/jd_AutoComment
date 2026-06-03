@@ -8,6 +8,7 @@ import copy
 import logging
 import os
 import random
+import re
 import sys
 import time
 import urllib
@@ -222,61 +223,23 @@ def all_evaluate(opts=None):
         opts["logger"].debug(
             "Status code of the response is %d, not 200", req.status_code
         )
-    
-    # 检查是否重定向到登录页面
-    if "login.aspx" in req.url or "passport.jd.com" in req.url:
-        opts["logger"].error("Cookie已失效，需要重新登录并获取新的Cookie")
-        return {}  # 返回空字典，表示cookie无效
-        
     req_et = etree.HTML(req.text)
     opts["logger"].debug("Successfully parsed an XML tree")
     evaluate_data = req_et.xpath('//*[@id="main"]/div[2]/div[1]/div/ul/li')
     # print(evaluate)
     loop_times = len(evaluate_data)
     opts["logger"].debug("Total loop times: %d", loop_times)
-    
-    if loop_times == 0:
-        opts["logger"].error("无法获取评价数据，网页结构可能已改变")
-        return {}  # 返回空字典，表示无法获取数据
-        
     for i, ev in enumerate(evaluate_data):
         opts["logger"].debug("Loop: %d / %d", i + 1, loop_times)
+        na = ev.xpath("a/text()")[0]
+        opts["logger"].debug("na: %s", na)
         try:
-            na = ev.xpath("a/text()")[0]
-            opts["logger"].debug("na: %s", na)
-            
-            # 尝试找到数量信息
-            try:
-                # 首先尝试获取 <b class="sup"> 标签中的数量
-                sup_elements = ev.xpath("b[@class='sup']/text()")
-                if sup_elements:
-                    num = sup_elements[0]
-                    opts["logger"].debug("从b[@class='sup']标签中获取到数量: %s", num)
-                else:
-                    # 然后尝试获取普通的 <b> 标签
-                    b_elements = ev.xpath("b/text()")
-                    if b_elements:
-                        num = b_elements[0]
-                        opts["logger"].debug("从b标签中获取到数量: %s", num)
-                    else:
-                        # 最后尝试其他可能包含数量的标签
-                        num_elements = ev.xpath(".//span[contains(@class, 'num')]/text() | .//em[contains(@class, 'num')]/text() | .//span[contains(@class, 'count')]/text() | .//em[contains(@class, 'count')]/text()")
-                        if num_elements:
-                            num = num_elements[0]
-                            opts["logger"].debug("从其他标签中获取到数量: %s", num)
-                        else:
-                            # 如果找不到任何数量，设为0
-                            opts["logger"].info("Can't find num content in XPath, fallback to 0")
-                            num = 0
-                opts["logger"].debug("num: %s", num)
-            except IndexError:
-                opts["logger"].info("Can't find num content in XPath, fallback to 0")
-                num = 0
-                
-            N[na] = int(num)
-        except Exception as e:
-            opts["logger"].error(f"解析评价数据时出错: {str(e)}")
-            
+            num = ev.xpath("b/text()")[0]
+            opts["logger"].debug("num: %s", num)
+        except IndexError:
+            opts["logger"].info("Can't find num content in XPath, fallback to 0")
+            num = 0
+        N[na] = int(num)
     return N
 
 
@@ -289,6 +252,26 @@ def delete_jpg():
             file_path = os.path.join(current_directory, file)
             # 删除文件
             os.remove(file_path)
+
+
+def normalize_product_id(pid: str) -> str:
+    """从商品链接中提取数字 productId（含图书 book.jd.com）。"""
+    pid = pid.strip()
+    for prefix in (
+        "//item.jd.com/",
+        "https://item.jd.com/",
+        "http://item.jd.com/",
+        "//book.jd.com/",
+        "https://book.jd.com/",
+        "http://book.jd.com/",
+    ):
+        if pid.startswith(prefix):
+            pid = pid[len(prefix):]
+    pid = pid.replace(".html", "").strip("/")
+    if pid.isdigit():
+        return pid
+    m = re.search(r"(\d{5,})", pid)
+    return m.group(1) if m else pid
 
 
 # 普通评价
@@ -360,7 +343,8 @@ def ordinary(N, opts=None):
         idx = 0
         for oname, pid in zip(oname_data, pid_data):
             opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times1)
-            pid = pid.replace("//item.jd.com/", "").replace(".html", "")
+            imgCommentCount_bool = True
+            pid = normalize_product_id(pid)
             opts["logger"].debug("pid: %s", pid)
             if "javascript" in pid:
                 opts["logger"].error(
@@ -391,15 +375,27 @@ def ordinary(N, opts=None):
                     "Status code of the response is %d, not 200", img_resp.status_code
                 )
             opts["logger"].info("imgdata_url:" + img_url)
-            imgdata = img_resp.json()
+            try:
+                imgdata = img_resp.json()
+            except requests.exceptions.JSONDecodeError:
+                opts["logger"].warning(
+                    "晒图接口返回非JSON（status=%s），改为无图评价。body=%s",
+                    img_resp.status_code,
+                    (img_resp.text or "")[:200],
+                )
+                imgdata = None
             opts["logger"].debug("Image data: %s", imgdata)
-            if imgdata["imgComments"]["imgCommentCount"] == 0:
+            img_comments = (imgdata or {}).get("imgComments") if isinstance(imgdata, dict) else None
+            if not img_comments:
+                opts["logger"].warning("晒图接口无有效 imgComments，改为无图评价")
+                imgCommentCount_bool = False
+            elif img_comments.get("imgCommentCount", 0) == 0:
                 opts["logger"].warning("这单没有图片数据，所以直接默认五星好评！！")
                 imgCommentCount_bool = False
-            elif imgdata["imgComments"]["imgCommentCount"] > 0:
-                imgurl1 = imgdata["imgComments"]["imgList"][0]["imageUrl"]
+            elif img_comments["imgCommentCount"] > 0:
+                imgurl1 = img_comments["imgList"][0]["imageUrl"]
                 opts["logger"].info("imgurl1 url: %s", imgurl1)
-                imgurl2 = imgdata["imgComments"]["imgList"][1]["imageUrl"]
+                imgurl2 = img_comments["imgList"][1]["imageUrl"]
                 opts["logger"].info("imgurl2 url: %s", imgurl2)
                 session = requests.Session()
                 imgBasic = "//img20.360buyimg.com/shaidan/s645x515_"
@@ -413,7 +409,7 @@ def ordinary(N, opts=None):
                     )
                     # print(imgPart1)  # 和上传图片操作
                     if imgPart1.status_code == 200 and ".jpg" in imgPart1.text:
-                        imgurl1 = f"{imgBasic}{imgPart1.text}"
+                        imgurl1t = f"{imgBasic}{imgPart1.text}"
                     else:
                         imgurl1 = ""
                         opts["logger"].info("上传图片失败")
@@ -428,7 +424,7 @@ def ordinary(N, opts=None):
                     )
                     # print(imgPart2)  # 和上传图片操作
                     if imgPart2.status_code == 200 and ".jpg" in imgPart2.text:
-                        imgurl2 = f"{imgBasic}{imgPart2.text}"
+                        imgurl2t = f"{imgBasic}{imgPart2.text}"
                     else:
                         imgurl2 = ""
                         opts["logger"].info("上传图片失败")
@@ -693,118 +689,63 @@ def Service_rating(N, opts=None):
             )
         req_et.append(etree.HTML(req.text))
         opts["logger"].debug("Successfully parsed an XML tree")
-    
-    # 尝试多种XPath选择器寻找服务评价数据
-    xpath_patterns = [
-        '//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]',
-        '//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]',
-        '//table[contains(@class, "order-tb")]/tbody/tr[@class="tr-bd"]',
-        '//div[@id="main"]//table//tr[@class="tr-bd"]'
-    ]
-    
-    for pattern in xpath_patterns:
-        opts["logger"].debug("Trying XPath pattern: %s", pattern)
-        for idx, et in enumerate(req_et):
-            opts["logger"].debug("Checking page %d with pattern %s", idx + 1, pattern)
-            elements = et.xpath(pattern)
-            opts["logger"].debug("Found %d elements on page %d", len(elements), idx + 1)
-            Order_data.extend(elements)
-        
-        if len(Order_data) > 0:
-            opts["logger"].info(f"找到 {len(Order_data)} 个服务评价项目，使用XPath: {pattern}")
-            break
-            
-    # 如果仍然无法获取数据，则标记服务评价为已完成
-    if len(Order_data) == 0:
-        opts["logger"].warning("无法找到服务评价数据，标记为已完成")
-        N["服务评价"] = 0
-        return N
-            
+    opts["logger"].debug("Fetching data from XML trees")
+    opts["logger"].debug("Total loop times: %d", loop_times)
+    for idx, i in enumerate(req_et):
+        opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+        opts["logger"].debug("Fetching order data in the default XPath")
+        elems = i.xpath('//*[@id="main"]/div[2]/div[2]/table/tbody/tr[@class="tr-bd"]')
+        opts["logger"].debug("Count of fetched order data: %d", len(elems))
+        Order_data.extend(elems)
+    if len(Order_data) != N["服务评价"]:
+        opts["logger"].debug('Count of fetched order data doesn\'t equal N["服务评价"]')
+        opts["logger"].debug("Clear the list Order_data")
+        Order_data = []
+        opts["logger"].debug("Total loop times: %d", loop_times)
+        for idx, i in enumerate(req_et):
+            opts["logger"].debug("Loop: %d / %d", idx + 1, loop_times)
+            opts["logger"].debug("Fetching order data in another XPath")
+            elems = i.xpath('//*[@id="main"]/div[2]/div[2]/table/tr[@class="tr-bd"]')
+            opts["logger"].debug("Count of fetched order data: %d", len(elems))
+            Order_data.extend(elems)
     opts["logger"].info(f"当前共有{N['服务评价']}个需要第一次服务评价。")
     opts["logger"].debug("Commenting on items")
-    successful_evaluations = 0
-    
     for i, Order in enumerate(Order_data):
+        oname = Order.xpath("td[1]/div[1]/div[2]/div/a/text()")[0]
         try:
-            # 尝试多种XPath模式获取商品名称
-            oname_patterns = [
-                "td[1]/div[1]/div[2]/div/a/text()",
-                ".//div[contains(@class, 'goods-item')]/div[contains(@class, 'p-name')]/a/text()",
-                ".//div[contains(@class, 'p-name')]/a/text()"
-            ]
-            
-            oname = None
-            for pattern in oname_patterns:
-                oname_result = Order.xpath(pattern)
-                if oname_result:
-                    oname = oname_result[0]
-                    opts["logger"].debug(f"Found oname using pattern: {pattern}")
-                    break
-            
-            if not oname:
-                opts["logger"].warning(f"第{i+1}个订单无法获取商品名称，跳过")
-                continue
-                
-            # 尝试多种XPath模式获取订单ID
-            oid_patterns = [
-                "td[4]/div/a[1]/@oid",
-                ".//a[contains(@class, 'btn-def')]/@oid",
-                ".//a[contains(@onclick, 'insertRestSurvey')]/@oid",
-                ".//@oid"
-            ]
-            
-            oid = None
-            for pattern in oid_patterns:
-                oid_result = Order.xpath(pattern)
-                if oid_result:
-                    oid = oid_result[0]
-                    opts["logger"].debug(f"Found oid using pattern: {pattern}")
-                    break
-            
-            if not oid:
-                opts["logger"].warning(f"第{i+1}个订单无法获取订单ID，跳过")
-                continue
-                
-            opts["logger"].info(f"\t开始第一次评论，{i+1}，{oname}")
-            opts["logger"].debug("oid: %s", oid)
-            url1 = (
-                f"https://club.jd.com/myJdcomments/insertRestSurvey.action"
-                f"?voteid=145&ruleid={oid}"
-            )
-            opts["logger"].debug("URL: %s", url1)
-            data1 = {
-                "oid": oid,
-                "gid": "32",
-                "sid": "186194",
-                "stid": "0",
-                "tags": "",
-                "ro591": f"591A{random.randint(4, 5)}",  # 商品符合度
-                "ro592": f"592A{random.randint(4, 5)}",  # 店家服务态度
-                "ro593": f"593A{random.randint(4, 5)}",  # 快递配送速度
-                "ro899": f"899A{random.randint(4, 5)}",  # 快递员服务
-                "ro900": f"900A{random.randint(4, 5)}",  # 快递员服务
-            }
-            opts["logger"].debug("Data: %s", data1)
-            if not opts.get("dry_run"):
-                opts["logger"].debug("Sending comment request")
-                try:
-                    pj1 = requests.post(url1, headers=headers, data=data1)
-                    opts["logger"].info(f"\t\t 响应: {pj1.text}")
-                    successful_evaluations += 1
-                except Exception as e:
-                    opts["logger"].error(f"发送评价请求时出错: {str(e)}")
-            else:
-                opts["logger"].debug("Skipped sending comment request in dry run")
-            
-            opts["logger"].debug("Sleep time (s): %.1f", SERVICE_RATING_SLEEP_SEC)
-            time.sleep(SERVICE_RATING_SLEEP_SEC)
-            
-        except Exception as e:
-            opts["logger"].error(f"处理第{i+1}个服务评价时出错: {str(e)}")
-    
-    opts["logger"].info(f"成功评价了 {successful_evaluations} 个服务")
-    # 无论是否评价成功，都将服务评价数量设为0，避免无限循环
-    N["服务评价"] = 0
+            oid = Order.xpath("td[4]/div/a[1]/@oid")[0]
+        except IndexError:
+            opts["logger"].warning("Failed to fetch oid")
+            continue
+        opts["logger"].info(f"\t开始第一次评论，{i+1}，{oname}")
+        opts["logger"].debug("oid: %s", oid)
+        url1 = (
+            f"https://club.jd.com/myJdcomments/insertRestSurvey.action"
+            f"?voteid=145&ruleid={oid}"
+        )
+        opts["logger"].debug("URL: %s", url1)
+        data1 = {
+            "oid": oid,
+            "gid": "32",
+            "sid": "186194",
+            "stid": "0",
+            "tags": "",
+            "ro591": f"591A{random.randint(4, 5)}",  # 商品符合度
+            "ro592": f"592A{random.randint(4, 5)}",  # 店家服务态度
+            "ro593": f"593A{random.randint(4, 5)}",  # 快递配送速度
+            "ro899": f"899A{random.randint(4, 5)}",  # 快递员服务
+            "ro900": f"900A{random.randint(4, 5)}",  # 快递员服务
+        }
+        opts["logger"].debug("Data: %s", data1)
+        if not opts.get("dry_run"):
+            opts["logger"].debug("Sending comment request")
+            pj1 = requests.post(url1, headers=headers, data=data1)
+        else:
+            opts["logger"].debug("Skipped sending comment request in dry run")
+        opts["logger"].info("\t\t " + pj1.text)
+        opts["logger"].debug("Sleep time (s): %.1f", SERVICE_RATING_SLEEP_SEC)
+        time.sleep(SERVICE_RATING_SLEEP_SEC)
+        N["服务评价"] -= 1
     return N
 
 
@@ -854,16 +795,10 @@ def main(opts=None):
         N = No(opts)
         opts["logger"].debug("N value after executing No(): %s", N)
     opts["logger"].info("全部完成啦！")
-    retry_needed = False
-    # 检查是否有待处理的评价，但排除服务评价
     for i in N:
-        if i != "服务评价" and N[i] != 0:
-            retry_needed = True
-            break
-    
-    if retry_needed:
-        opts["logger"].warning("出现了二次错误，跳过了部分，重新尝试")
-        main(opts)
+        if N[i] != 0:
+            opts["logger"].warning("出现了二次错误，跳过了部分，重新尝试")
+            main(opts)
 
 
 if __name__ == "__main__":

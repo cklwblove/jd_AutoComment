@@ -24,6 +24,91 @@ import jdspider
 # 添加停止标记
 stop_flag = False
 
+def safe_post_request(url, data, headers, opts, timeout=30, max_retries=3):
+    """
+    安全的POST请求函数，带重试机制和错误处理
+    :param url: 请求URL
+    :param data: 请求数据
+    :param headers: 请求头
+    :param opts: 选项字典，包含logger
+    :param timeout: 请求超时时间
+    :param max_retries: 最大重试次数
+    :return: 响应对象或None
+    """
+    logger = opts.get('logger', logging.getLogger(__name__))
+    
+    for attempt in range(max_retries):
+        try:
+            # 在重试前稍等一下
+            if attempt > 0:
+                wait_time = (attempt + 1) * 5  # 递增等待时间
+                logger.info(f"第{attempt + 1}次重试前等待{wait_time}秒...")
+                time.sleep(wait_time)
+            
+            response = requests.post(url, data=data, headers=headers, timeout=timeout)
+            
+            # 检查响应状态码
+            if response.status_code == 200:
+                # 检查响应内容是否包含错误信息
+                if response.text:
+                    try:
+                        # 尝试解析JSON响应
+                        if response.text.strip().startswith('{'):
+                            json_resp = response.json()
+                            if not json_resp.get('success', True):
+                                error_msg = json_resp.get('error', '未知错误')
+                                if '发布异常' in error_msg or '请稍后重试' in error_msg:
+                                    if attempt < max_retries - 1:
+                                        logger.warning(f"服务器返回发布异常，第{attempt + 1}次重试: {error_msg}")
+                                        continue
+                                    else:
+                                        logger.error(f"达到最大重试次数，评价失败: {error_msg}")
+                                        return response
+                                else:
+                                    # 其他类型的错误，不重试
+                                    return response
+                        elif '//www.jd.com/error2.aspx' in response.text:
+                            # 京东错误页面重定向
+                            if attempt < max_retries - 1:
+                                logger.warning(f"京东返回错误页面，第{attempt + 1}次重试")
+                                continue
+                            else:
+                                logger.error("达到最大重试次数，京东返回错误页面")
+                                return response
+                    except json.JSONDecodeError:
+                        # 非JSON响应，直接返回
+                        pass
+                
+                # 正常响应
+                return response
+            else:
+                if attempt < max_retries - 1:
+                    logger.warning(f"HTTP状态码异常: {response.status_code}，第{attempt + 1}次重试")
+                    continue
+                else:
+                    logger.error(f"达到最大重试次数，HTTP状态码: {response.status_code}")
+                    return response
+                    
+        except requests.exceptions.Timeout:
+            if attempt < max_retries - 1:
+                logger.warning(f"请求超时，第{attempt + 1}次重试")
+                continue
+            else:
+                logger.error("达到最大重试次数，请求超时")
+                raise
+        except requests.exceptions.ConnectionError:
+            if attempt < max_retries - 1:
+                logger.warning(f"连接错误，第{attempt + 1}次重试")
+                continue
+            else:
+                logger.error("达到最大重试次数，连接错误")
+                raise
+        except Exception as e:
+            logger.error(f"请求发生未知错误: {str(e)}")
+            raise
+    
+    return None
+
 # 添加全局headers变量初始定义
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
@@ -35,10 +120,10 @@ headers2 = {
 # constants
 CONFIG_PATH = "./config.yml"
 USER_CONFIG_PATH = "./config.user.yml"
-ORDINARY_SLEEP_SEC = 10
-SUNBW_SLEEP_SEC = 5
-REVIEW_SLEEP_SEC = 10
-SERVICE_RATING_SLEEP_SEC = 15
+ORDINARY_SLEEP_SEC = 20  # 从10秒增加到20秒
+SUNBW_SLEEP_SEC = 10     # 从5秒增加到10秒
+REVIEW_SLEEP_SEC = 20    # 从10秒增加到20秒
+SERVICE_RATING_SLEEP_SEC = 25  # 从15秒增加到25秒
 
 # logging with styles
 # Reference: https://stackoverflow.com/a/384125/12002560
@@ -787,13 +872,17 @@ def ordinary(N, opts=None):
                 }
                 
                 opts["logger"].debug(f"提交评价数据: {payload}")
-                r = requests.post(post_url, data=payload, headers=headers)
-                opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                r = safe_post_request(post_url, payload, headers, opts)
                 
-                if r.text.find('"success"') != -1:
-                    opts["logger"].info("评价成功！")
+                if r:
+                    opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                    
+                    if r.text.find('"success"') != -1:
+                        opts["logger"].info("评价成功！")
+                    else:
+                        opts["logger"].error(f"评价失败: {r.text}")
                 else:
-                    opts["logger"].error(f"评价失败: {r.text}")
+                    opts["logger"].error("评价请求失败，未收到响应")
                     
                 continue
                 
@@ -916,13 +1005,17 @@ def ordinary(N, opts=None):
                         payload["saveStatus"] = "2"
                     
                     opts["logger"].debug(f"提交评价数据: {payload}")
-                    r = requests.post(post_url, data=payload, headers=headers)
-                    opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                    r = safe_post_request(post_url, payload, headers, opts)
                     
-                    if r.text.find('"success"') != -1:
-                        opts["logger"].info("评价成功！")
+                    if r:
+                        opts["logger"].debug(f"评价提交结果: {r.status_code}, {r.text}")
+                        
+                        if r.text.find('"success"') != -1:
+                            opts["logger"].info("评价成功！")
+                        else:
+                            opts["logger"].error(f"评价失败: {r.text}")
                     else:
-                        opts["logger"].error(f"评价失败: {r.text}")
+                        opts["logger"].error("评价请求失败，未收到响应")
                     
                     time.sleep(ORDINARY_SLEEP_SEC)
                     
@@ -1098,18 +1191,22 @@ def review(N, opts=None):
                 if not opts.get("dry_run"):
                     opts["logger"].debug("Sending comment request")
                     try:
-                        Comment_resp = requests.post(url2, headers=headers2, data=Comment_data)
-                        opts["logger"].info(
-                            "发送请求后的状态码:{},text:{}".format(
-                                Comment_resp.status_code, Comment_resp.text
-                            )
-                        )
+                        Comment_resp = safe_post_request(url2, Comment_data, headers2, opts)
                         
-                        if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
-                            order_count += 1
-                            opts["logger"].info(f"\t追评成功:{oname}")
+                        if Comment_resp:
+                            opts["logger"].info(
+                                "发送请求后的状态码:{},text:{}".format(
+                                    Comment_resp.status_code, Comment_resp.text
+                                )
+                            )
+                            
+                            if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
+                                order_count += 1
+                                opts["logger"].info(f"\t追评成功:{oname}")
+                            else:
+                                opts["logger"].warning(f"\t追评失败:{oname}")
                         else:
-                            opts["logger"].warning(f"\t追评失败:{oname}")
+                            opts["logger"].error(f"\t追评请求失败，未收到响应:{oname}")
                     except Exception as e:
                         opts["logger"].error(f"发送请求时出错: {e}")
                 else:
@@ -1255,18 +1352,22 @@ def Service_rating(N, opts=None):
                 
                 # 发送评价请求
                 if not opts.get("dry_run"):
-                    Comment_resp = requests.post(url, headers=headers2, data=Comment_data)
-                    opts["logger"].info(
-                        "发送请求后的状态码:{},text:{}".format(
-                            Comment_resp.status_code, Comment_resp.text
-                        )
-                    )
+                    Comment_resp = safe_post_request(url, Comment_data, headers2, opts)
                     
-                    if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
-                        successful_evaluations += 1
-                        opts["logger"].info(f"\t服务评价成功:{oid}")
+                    if Comment_resp:
+                        opts["logger"].info(
+                            "发送请求后的状态码:{},text:{}".format(
+                                Comment_resp.status_code, Comment_resp.text
+                            )
+                        )
+                        
+                        if Comment_resp.status_code == 200 and "success" in Comment_resp.text:
+                            successful_evaluations += 1
+                            opts["logger"].info(f"\t服务评价成功:{oid}")
+                        else:
+                            opts["logger"].warning(f"\t服务评价失败:{oid}")
                     else:
-                        opts["logger"].warning(f"\t服务评价失败:{oid}")
+                        opts["logger"].error(f"\t服务评价请求失败，未收到响应:{oid}")
                 else:
                     opts["logger"].debug("Skipped sending comment request in dry run")
                     opts["logger"].info(f"\t[DRY RUN] 服务评价成功:{oid}")
@@ -1509,44 +1610,61 @@ if __name__ == "__main__":
     _logging_level = getattr(logging, opts["log_level"])
     logger = logging.getLogger("comment")
     logger.setLevel(level=_logging_level)
-    # NOTE: `%(levelname)s` will be parsed as the original name (`FATAL` ->
-    # `CRITICAL`, `WARN` -> `WARNING`).
-    # NOTE: The alignment number should set to 19 considering the style
-    # controling characters. When it comes to file logger, the number should
-    # set to 8.
-    formatter = StyleFormatter("%(asctime)s %(levelname)-19s %(message)s")
-    rawformatter = StyleFormatter(
-        "%(asctime)s %(levelname)-8s %(message)s", use_style=False
-    )
-    console = logging.StreamHandler()
-    console.setLevel(_logging_level)
-    console.setFormatter(formatter)
-    logger.addHandler(console)
+    
+    # 检查logger是否已有处理程序，避免重复添加
+    if not logger.handlers:
+        # NOTE: `%(levelname)s` will be parsed as the original name (`FATAL` ->
+        # `CRITICAL`, `WARN` -> `WARNING`).
+        # NOTE: The alignment number should set to 19 considering the style
+        # controling characters. When it comes to file logger, the number should
+        # set to 8.
+        formatter = StyleFormatter("%(asctime)s %(levelname)-19s %(message)s")
+        rawformatter = StyleFormatter(
+            "%(asctime)s %(levelname)-8s %(message)s", use_style=False
+        )
+        console = logging.StreamHandler()
+        console.setLevel(_logging_level)
+        console.setFormatter(formatter)
+        logger.addHandler(console)
+        
+        # 如果需要文件日志
+        if opts["log_file"]:
+            try:
+                handler = logging.FileHandler(opts["log_file"], "w")
+                handler.setLevel(_logging_level)
+                handler.setFormatter(rawformatter)
+                logger.addHandler(handler)
+            except Exception as e:
+                logger.error("Failed to open the file handler")
+                logger.error("Error message: %s", e)
+    
+    # 无论是否有处理程序，都设置logger到opts
     opts["logger"] = logger
+    
     # It's a hack!!!
     jieba.default_logger = logging.getLogger("jieba")
     jieba.default_logger.setLevel(level=_logging_level)
-    jieba.default_logger.addHandler(console)
+    # 只在没有处理程序时添加
+    if not jieba.default_logger.handlers:
+        if 'console' in locals():
+            jieba.default_logger.addHandler(console)
+        if opts["log_file"] and 'handler' in locals():
+            jieba.default_logger.addHandler(handler)
+    
     # It's another hack!!!
     jdspider.default_logger = logging.getLogger("spider")
     jdspider.default_logger.setLevel(level=_logging_level)
-    jdspider.default_logger.addHandler(console)
+    # 只在没有处理程序时添加
+    if not jdspider.default_logger.handlers:
+        if 'console' in locals():
+            jdspider.default_logger.addHandler(console)
+        if opts["log_file"] and 'handler' in locals():
+            jdspider.default_logger.addHandler(handler)
 
     logger.debug("Successfully set up console logger")
     logger.debug("CLI arguments: %s", args)
-    logger.debug("Opening the log file")
+    # 已经在上面设置了日志文件，所以这里不需要重复设置
     if opts["log_file"]:
-        try:
-            handler = logging.FileHandler(opts["log_file"], "w")
-        except Exception as e:
-            logger.error("Failed to open the file handler")
-            logger.error("Error message: %s", e)
-            sys.exit(1)
-        handler.setLevel(_logging_level)
-        handler.setFormatter(rawformatter)
-        logger.addHandler(handler)
-        jieba.default_logger.addHandler(handler)
-        jdspider.default_logger.addHandler(handler)
         logger.debug("Successfully set up file logger")
     logger.debug("Options passed to functions: %s", opts)
     logger.debug("Builtin constants:")
